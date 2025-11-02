@@ -1713,47 +1713,54 @@
           salesDataRaw.push(data);
         });
 
-        if (salesDataRaw.length === 0) {
-          showToast('다운로드할 데이터가 없습니다');
-          return;
+        // 해당 월의 모든 날짜 생성
+        const [year, monthNum] = month.split('-').map(Number);
+        const daysInMonth = new Date(year, monthNum, 0).getDate();
+        const allDates = [];
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${year}-${String(monthNum).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          allDates.push(dateStr);
         }
 
         // 날짜별로 그룹화
         const salesByDate = {};
+        
+        // 모든 날짜를 빈 데이터로 초기화
+        allDates.forEach(date => {
+          salesByDate[date] = {
+            '날짜': date,
+            '오프라인': 0,
+            '배달의민족': 0,
+            '쿠팡이츠': 0,
+            '땡겨요': 0,
+            '네이버주문': 0,
+            '단체주문': 0,
+            '강의': 0,
+            '기타': 0,
+            '메모': ''
+          };
+        });
+        
+        // 실제 데이터로 덮어쓰기
         salesDataRaw.forEach(item => {
           const date = item.sales_date;
-          if (!salesByDate[date]) {
-            salesByDate[date] = {
-              '날짜': date,
-              '오프라인': 0,
-              '배달의민족': 0,
-              '쿠팡이츠': 0,
-              '땡겨요': 0,
-              '네이버주문': 0,
-              '단체주문': 0,
-              '강의': 0,
-              '기타': 0,
-              '메모': ''
-            };
-          }
-          
-          const channel = item.channel;
-          const amount = item.amount || 0;
-          
-          if (salesByDate[date][channel] !== undefined) {
-            salesByDate[date][channel] = amount;
-          }
-          
-          // 메모는 마지막 것으로 덮어쓰기 (또는 병합 가능)
-          if (item.memo) {
-            salesByDate[date]['메모'] = item.memo;
+          if (salesByDate[date]) {
+            const channel = item.channel;
+            const amount = item.amount || 0;
+            
+            if (salesByDate[date][channel] !== undefined) {
+              salesByDate[date][channel] = amount;
+            }
+            
+            if (item.memo) {
+              salesByDate[date]['메모'] = item.memo;
+            }
           }
         });
 
         // 날짜순으로 정렬
-        const salesData = Object.values(salesByDate).sort((a, b) => {
-          return a['날짜'].localeCompare(b['날짜']);
-        });
+        const salesData = allDates.map(date => salesByDate[date]);
 
         // 엑셀 파일 생성
         const wb = XLSX.utils.book_new();
@@ -1773,11 +1780,37 @@
           { wch: 20 }  // 메모
         ];
         
+        // A열(날짜)을 엑셀 날짜 서식으로 설정
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let row = range.s.r + 1; row <= range.e.r; row++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: row, c: 0 });
+          const cell = ws[cellAddress];
+          if (cell && cell.v) {
+            // 날짜 문자열을 Date 객체로 변환
+            const dateValue = new Date(cell.v);
+            cell.t = 'd'; // 날짜 타입
+            cell.v = dateValue;
+            cell.z = 'yyyy-mm-dd'; // 날짜 서식
+          }
+        }
+        
+        // 0 값을 빈칸으로 표시
+        for (let row = range.s.r + 1; row <= range.e.r; row++) {
+          for (let col = 1; col <= 8; col++) { // 오프라인부터 기타까지
+            const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+            const cell = ws[cellAddress];
+            if (cell && cell.v === 0) {
+              cell.v = '';
+              cell.t = 's'; // 문자열 타입
+            }
+          }
+        }
+        
         XLSX.utils.book_append_sheet(wb, ws, '매출내역');
         
         // 파일 다운로드
         XLSX.writeFile(wb, `매출내역_${month}.xlsx`);
-        showToast('엑셀 파일이 다운로드되었습니다 (가로형식)');
+        showToast('엑셀 파일이 다운로드되었습니다 (전체 날짜 포함)');
         
       } catch (error) {
         console.error('Excel download error:', error);
