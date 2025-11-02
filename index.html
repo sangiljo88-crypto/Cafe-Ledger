@@ -1706,31 +1706,78 @@
         );
         
         const snapshot = await getDocs(q);
-        const salesData = [];
+        const salesDataRaw = [];
         
         snapshot.forEach(doc => {
           const data = doc.data();
-          salesData.push({
-            '날짜': data.sales_date || '',
-            '채널': data.channel || '',
-            '금액': data.amount || 0,
-            '메모': data.memo || ''
-          });
+          salesDataRaw.push(data);
         });
 
-        if (salesData.length === 0) {
+        if (salesDataRaw.length === 0) {
           showToast('다운로드할 데이터가 없습니다');
           return;
         }
 
+        // 날짜별로 그룹화
+        const salesByDate = {};
+        salesDataRaw.forEach(item => {
+          const date = item.sales_date;
+          if (!salesByDate[date]) {
+            salesByDate[date] = {
+              '날짜': date,
+              '오프라인': 0,
+              '배달의민족': 0,
+              '쿠팡이츠': 0,
+              '땡겨요': 0,
+              '네이버주문': 0,
+              '단체주문': 0,
+              '강의': 0,
+              '기타': 0,
+              '메모': ''
+            };
+          }
+          
+          const channel = item.channel;
+          const amount = item.amount || 0;
+          
+          if (salesByDate[date][channel] !== undefined) {
+            salesByDate[date][channel] = amount;
+          }
+          
+          // 메모는 마지막 것으로 덮어쓰기 (또는 병합 가능)
+          if (item.memo) {
+            salesByDate[date]['메모'] = item.memo;
+          }
+        });
+
+        // 날짜순으로 정렬
+        const salesData = Object.values(salesByDate).sort((a, b) => {
+          return a['날짜'].localeCompare(b['날짜']);
+        });
+
         // 엑셀 파일 생성
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.json_to_sheet(salesData);
+        
+        // 컬럼 너비 설정
+        ws['!cols'] = [
+          { wch: 12 }, // 날짜
+          { wch: 10 }, // 오프라인
+          { wch: 12 }, // 배달의민족
+          { wch: 10 }, // 쿠팡이츠
+          { wch: 8 },  // 땡겨요
+          { wch: 12 }, // 네이버주문
+          { wch: 10 }, // 단체주문
+          { wch: 8 },  // 강의
+          { wch: 8 },  // 기타
+          { wch: 20 }  // 메모
+        ];
+        
         XLSX.utils.book_append_sheet(wb, ws, '매출내역');
         
         // 파일 다운로드
         XLSX.writeFile(wb, `매출내역_${month}.xlsx`);
-        showToast('엑셀 파일이 다운로드되었습니다');
+        showToast('엑셀 파일이 다운로드되었습니다 (가로형식)');
         
       } catch (error) {
         console.error('Excel download error:', error);
