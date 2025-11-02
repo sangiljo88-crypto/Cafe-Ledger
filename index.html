@@ -1371,6 +1371,10 @@
                   <i class="fas fa-download"></i>
                   엑셀 다운로드
                 </button>
+                <button id="downloadAllPurchasesExcel" class="btn btn-primary">
+                  <i class="fas fa-download"></i>
+                  전체 다운로드
+                </button>
                 <button id="downloadPurchasesTemplate" class="btn btn-secondary admin-only hidden">
                   <i class="fas fa-file-excel"></i>
                   양식 다운로드
@@ -1828,31 +1832,137 @@
         );
         
         const snapshot = await getDocs(q);
-        const purchasesData = [];
+        const purchasesDataRaw = {};
         
+        // 데이터 수집
         snapshot.forEach(doc => {
           const data = doc.data();
-          purchasesData.push({
-            '그룹': data.group_name || '',
-            '카테고리': data.category || '',
-            '금액': data.amount || 0,
-            '메모': data.memo || ''
-          });
+          const key = `${data.group_name}_${data.category}`;
+          purchasesDataRaw[key] = {
+            group_name: data.group_name,
+            category: data.category,
+            amount: data.amount || 0,
+            memo: data.memo || ''
+          };
         });
 
-        if (purchasesData.length === 0) {
-          showToast('다운로드할 데이터가 없습니다');
-          return;
-        }
+        // 모든 카테고리를 포함한 완전한 데이터 생성
+        const purchasesData = [];
+        
+        Object.keys(PURCHASE_GROUPS).forEach(groupName => {
+          PURCHASE_GROUPS[groupName].forEach(category => {
+            const key = `${groupName}_${category}`;
+            const existingData = purchasesDataRaw[key];
+            
+            purchasesData.push({
+              '월': month,
+              '그룹': groupName,
+              '카테고리': category,
+              '금액': existingData ? existingData.amount : 0,
+              '메모': existingData ? existingData.memo : ''
+            });
+          });
+        });
 
         // 엑셀 파일 생성
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.json_to_sheet(purchasesData);
+        
+        // 컬럼 너비 설정
+        ws['!cols'] = [
+          { wch: 10 }, // 월
+          { wch: 15 }, // 그룹
+          { wch: 15 }, // 카테고리
+          { wch: 12 }, // 금액
+          { wch: 20 }  // 메모
+        ];
+        
         XLSX.utils.book_append_sheet(wb, ws, '매입내역');
         
         // 파일 다운로드
         XLSX.writeFile(wb, `매입내역_${month}.xlsx`);
-        showToast('엑셀 파일이 다운로드되었습니다');
+        showToast('엑셀 파일이 다운로드되었습니다 (전체 항목 포함)');
+        
+      } catch (error) {
+        console.error('Excel download error:', error);
+        showToast('엑셀 다운로드 중 오류가 발생했습니다');
+      }
+    }
+
+    // 여러 월 한번에 다운로드 (각 월을 시트로 구분)
+    async function downloadAllPurchasesExcel() {
+      try {
+        // 최근 12개월 가져오기
+        const months = getRecentMonths(12);
+        const wb = XLSX.utils.book_new();
+        let hasData = false;
+
+        for (const month of months) {
+          const q = query(
+            collection(db, 'purchases'),
+            where('ym', '==', month)
+          );
+          
+          const snapshot = await getDocs(q);
+          const purchasesDataRaw = {};
+          
+          // 데이터 수집
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const key = `${data.group_name}_${data.category}`;
+            purchasesDataRaw[key] = {
+              group_name: data.group_name,
+              category: data.category,
+              amount: data.amount || 0,
+              memo: data.memo || ''
+            };
+          });
+
+          // 모든 카테고리를 포함한 완전한 데이터 생성
+          const purchasesData = [];
+          
+          Object.keys(PURCHASE_GROUPS).forEach(groupName => {
+            PURCHASE_GROUPS[groupName].forEach(category => {
+              const key = `${groupName}_${category}`;
+              const existingData = purchasesDataRaw[key];
+              
+              purchasesData.push({
+                '월': month,
+                '그룹': groupName,
+                '카테고리': category,
+                '금액': existingData ? existingData.amount : 0,
+                '메모': existingData ? existingData.memo : ''
+              });
+            });
+          });
+
+          // 시트 추가
+          const ws = XLSX.utils.json_to_sheet(purchasesData);
+          
+          // 컬럼 너비 설정
+          ws['!cols'] = [
+            { wch: 10 }, // 월
+            { wch: 15 }, // 그룹
+            { wch: 15 }, // 카테고리
+            { wch: 12 }, // 금액
+            { wch: 20 }  // 메모
+          ];
+          
+          // 월을 시트명으로 사용 (엑셀 시트명 제한에 맞게)
+          const sheetName = month.replace('-', '');
+          XLSX.utils.book_append_sheet(wb, ws, sheetName);
+          hasData = true;
+        }
+
+        if (!hasData) {
+          showToast('다운로드할 데이터가 없습니다');
+          return;
+        }
+
+        // 파일 다운로드
+        const today = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `매입내역_전체_${today}.xlsx`);
+        showToast('전체 매입 데이터가 다운로드되었습니다 (월별 시트)');
         
       } catch (error) {
         console.error('Excel download error:', error);
@@ -1918,11 +2028,13 @@
 
     async function downloadPurchasesTemplate() {
       try {
+        const currentMonth = getKoreanCurrentMonth();
         const templateData = [];
         
         Object.keys(PURCHASE_GROUPS).forEach(groupName => {
           PURCHASE_GROUPS[groupName].forEach(category => {
             templateData.push({
+              '월': currentMonth,
               '그룹': groupName,
               '카테고리': category,
               '금액': 0,
@@ -1934,11 +2046,21 @@
         // 엑셀 파일 생성
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.json_to_sheet(templateData);
+        
+        // 컬럼 너비 설정
+        ws['!cols'] = [
+          { wch: 10 }, // 월
+          { wch: 15 }, // 그룹
+          { wch: 15 }, // 카테고리
+          { wch: 12 }, // 금액
+          { wch: 20 }  // 메모
+        ];
+        
         XLSX.utils.book_append_sheet(wb, ws, '매입양식');
         
         // 파일 다운로드
-        XLSX.writeFile(wb, '매입양식.xlsx');
-        showToast('매입 양식이 다운로드되었습니다');
+        XLSX.writeFile(wb, `매입양식_${currentMonth}.xlsx`);
+        showToast('매입 양식이 다운로드되었습니다 (월 정보 포함)');
         
       } catch (error) {
         console.error('Template download error:', error);
@@ -2131,36 +2253,27 @@
           return;
         }
 
-        // 월 정보 가져오기
-        const ym = $('purchasesMonth').value;
-
-        // 기존 데이터 삭제
-        const existingQuery = query(
-          collection(db, 'purchases'),
-          where('ym', '==', ym)
-        );
-        const existingSnapshot = await getDocs(existingQuery);
+        // 월별로 데이터 그룹화
+        const dataByMonth = {};
         
-        const deletePromises = [];
-        existingSnapshot.forEach(doc => {
-          deletePromises.push(deleteDoc(doc.ref));
-        });
-        
-        if (deletePromises.length > 0) {
-          await Promise.all(deletePromises);
-        }
-
-        // 데이터 변환 및 저장
-        const purchasesData = [];
-
         for (const row of jsonData) {
+          const ym = row['월'] || row['month'] || '';
           const groupName = row['그룹'] || row['group'] || '';
           const category = row['카테고리'] || row['category'] || '';
           const amount = parseNumber(row['금액'] || row['amount']);
           const memo = row['메모'] || row['memo'] || '';
 
+          if (!ym) {
+            showToast('월 정보가 없는 행이 있습니다. 엑셀의 "월" 컬럼을 확인해주세요.');
+            return;
+          }
+
           if (groupName && category && amount > 0) {
-            purchasesData.push({
+            if (!dataByMonth[ym]) {
+              dataByMonth[ym] = [];
+            }
+            
+            dataByMonth[ym].push({
               ym: ym,
               group_name: groupName,
               category: category,
@@ -2171,16 +2284,40 @@
           }
         }
 
-        if (purchasesData.length === 0) {
+        if (Object.keys(dataByMonth).length === 0) {
           showToast('유효한 매입 데이터가 없습니다');
           return;
         }
 
-        // 새 데이터 저장
-        const savePromises = purchasesData.map(data => addDoc(collection(db, 'purchases'), data));
-        await Promise.all(savePromises);
+        // 각 월별로 기존 데이터 삭제 후 새 데이터 저장
+        let totalCount = 0;
+        
+        for (const [ym, purchases] of Object.entries(dataByMonth)) {
+          // 기존 데이터 삭제
+          const existingQuery = query(
+            collection(db, 'purchases'),
+            where('ym', '==', ym)
+          );
+          const existingSnapshot = await getDocs(existingQuery);
+          
+          const deletePromises = [];
+          existingSnapshot.forEach(doc => {
+            deletePromises.push(deleteDoc(doc.ref));
+          });
+          
+          if (deletePromises.length > 0) {
+            await Promise.all(deletePromises);
+          }
 
-        showToast(`${purchasesData.length}건의 매입 데이터가 업로드되었습니다`);
+          // 새 데이터 저장
+          const savePromises = purchases.map(data => addDoc(collection(db, 'purchases'), data));
+          await Promise.all(savePromises);
+          
+          totalCount += purchases.length;
+        }
+
+        const monthList = Object.keys(dataByMonth).join(', ');
+        showToast(`${totalCount}건의 매입 데이터가 업로드되었습니다 (${monthList})`);
         
         // 파일 입력 초기화
         event.target.value = '';
@@ -3317,6 +3454,7 @@
       $('salesFileInput').addEventListener('change', uploadSalesExcel);
 
       $('downloadPurchasesExcel').addEventListener('click', downloadPurchasesExcel);
+      $('downloadAllPurchasesExcel').addEventListener('click', downloadAllPurchasesExcel);
       $('downloadPurchasesTemplate').addEventListener('click', downloadPurchasesTemplate);
       $('uploadPurchasesExcel').addEventListener('click', () => $('purchasesFileInput').click());
       $('purchasesFileInput').addEventListener('change', uploadPurchasesExcel);
