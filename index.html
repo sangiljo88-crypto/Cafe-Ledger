@@ -2253,8 +2253,9 @@
           return;
         }
 
-        // 월별로 데이터 그룹화
+        // 월별로 데이터 그룹화 및 월 정보 수집
         const dataByMonth = {};
+        const monthsInExcel = new Set();
         
         for (const row of jsonData) {
           const ym = row['월'] || row['month'] || '';
@@ -2268,6 +2269,10 @@
             return;
           }
 
+          // 엑셀에 있는 모든 월 정보 수집
+          monthsInExcel.add(ym);
+
+          // amount > 0인 데이터만 저장 대상으로 추가
           if (groupName && category && amount > 0) {
             if (!dataByMonth[ym]) {
               dataByMonth[ym] = [];
@@ -2284,15 +2289,15 @@
           }
         }
 
-        if (Object.keys(dataByMonth).length === 0) {
-          showToast('유효한 매입 데이터가 없습니다');
+        if (monthsInExcel.size === 0) {
+          showToast('월 정보가 없습니다');
           return;
         }
 
-        // 각 월별로 기존 데이터 삭제 후 새 데이터 저장
+        // 엑셀에 있는 각 월별로 기존 데이터를 모두 삭제
         let totalCount = 0;
         
-        for (const [ym, purchases] of Object.entries(dataByMonth)) {
+        for (const ym of monthsInExcel) {
           // 기존 데이터 삭제
           const existingQuery = query(
             collection(db, 'purchases'),
@@ -2309,15 +2314,20 @@
             await Promise.all(deletePromises);
           }
 
-          // 새 데이터 저장
-          const savePromises = purchases.map(data => addDoc(collection(db, 'purchases'), data));
-          await Promise.all(savePromises);
-          
-          totalCount += purchases.length;
+          // 새 데이터 저장 (amount > 0인 것만)
+          if (dataByMonth[ym] && dataByMonth[ym].length > 0) {
+            const savePromises = dataByMonth[ym].map(data => addDoc(collection(db, 'purchases'), data));
+            await Promise.all(savePromises);
+            totalCount += dataByMonth[ym].length;
+          }
         }
 
-        const monthList = Object.keys(dataByMonth).join(', ');
-        showToast(`${totalCount}건의 매입 데이터가 업로드되었습니다 (${monthList})`);
+        const monthList = Array.from(monthsInExcel).join(', ');
+        if (totalCount > 0) {
+          showToast(`${totalCount}건의 매입 데이터가 업로드되었습니다 (${monthList})`);
+        } else {
+          showToast(`${monthList} 월의 기존 데이터가 모두 삭제되었습니다 (0원 업로드)`);
+        }
         
         // 파일 입력 초기화
         event.target.value = '';
