@@ -1,0 +1,3288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>☕ 카페 사업장부</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #a5b4fc;
+      --secondary: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #22c55e;
+      
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --bg-card: #1e293b;
+      --bg-elevated: #334155;
+      
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      
+      --border: #334155;
+      --border-light: #475569;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      
+      --radius: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, #1a202c 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Cards */
+    .card {
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      box-shadow: var(--shadow-lg);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
+      border-color: var(--border-light);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Auth Cards */
+    .auth-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 3rem;
+      box-shadow: var(--shadow-xl);
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .auth-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .auth-subtitle {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: rgba(51, 65, 85, 0.5);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-size: 0.925rem;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      background: rgba(51, 65, 85, 0.8);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: rgba(51, 65, 85, 0.5);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-size: 0.925rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    /* Date Navigation */
+    .date-navigation {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      max-width: 400px;
+    }
+
+    .date-nav-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: rgba(71, 85, 105, 0.8);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+    }
+
+    .date-nav-btn:hover {
+      background: var(--bg-elevated);
+      border-color: var(--border-light);
+      transform: translateY(-1px);
+    }
+
+    .date-nav-btn.today-btn {
+      width: auto;
+      padding: 0 1rem;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.5rem;
+      font-size: 0.925rem;
+      font-weight: 500;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      text-align: center;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: var(--shadow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .btn-secondary {
+      background: rgba(71, 85, 105, 0.8);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-elevated);
+      border-color: var(--border-light);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger), #dc2626);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--success), var(--secondary));
+      color: white;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+    /* 월 범위 모드에서 카드들을 한 줄로 배치 */
+    .grid-wide { 
+      display: flex;
+      gap: 1.5rem;
+      overflow-x: auto;
+    }
+    
+    .grid-wide > .card {
+      flex: 0 0 auto;
+      min-width: 320px;
+      max-width: 450px;
+    }
+
+    /* Metrics */
+    .metric-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(16, 185, 129, 0.1));
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .metric-label {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .metric-change {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-weight: 500;
+    }
+
+    .metric-positive {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--success);
+    }
+
+    .metric-negative {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      padding: 0.5rem;
+      background: rgba(51, 65, 85, 0.3);
+      border-radius: var(--radius-lg);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 0.875rem 1.5rem;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: var(--shadow);
+    }
+
+    .tab:hover:not(.active) {
+      background: rgba(71, 85, 105, 0.5);
+      color: var(--text-secondary);
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table th {
+      background: rgba(51, 65, 85, 0.5);
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .table tbody tr:hover {
+      background: rgba(51, 65, 85, 0.3);
+    }
+
+    .table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Period Selector */
+    .period-selector {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(51, 65, 85, 0.3);
+      padding: 0.25rem;
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+    }
+
+    .period-btn {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: none;
+      border-radius: calc(var(--radius) - 2px);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .period-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.5rem;
+      color: var(--text-primary);
+      box-shadow: var(--shadow-xl);
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    /* Auth Switch */
+    .auth-switch {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .auth-link {
+      color: var(--primary-light);
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .auth-link:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+
+    /* Error Messages */
+    .error {
+      color: var(--danger);
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .error.show {
+      display: block;
+    }
+
+    /* Role Badge */
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 9999px;
+      color: var(--primary-light);
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    /* Date Navigation Enhanced */
+    .date-navigation-enhanced {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      max-width: 500px;
+    }
+
+    .date-input-container {
+      position: relative;
+      flex: 1;
+      display: flex;
+    }
+
+    .date-input {
+      flex: 1;
+      margin: 0;
+    }
+
+    .date-calendar-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .date-calendar-btn:hover {
+      color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .date-controls {
+      margin-bottom: 1rem;
+    }
+
+    .date-controls.hidden {
+      display: none;
+    }
+
+    /* Utilities */
+    .hidden { display: none !important; }
+    .text-center { text-align: center; }
+    .text-muted { color: var(--text-muted); }
+    .mb-4 { margin-bottom: 1rem; }
+    .mt-4 { margin-top: 1rem; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header {
+        padding: 1rem;
+      }
+      
+      .container {
+        padding: 1rem;
+      }
+      
+      .auth-card {
+        padding: 2rem;
+      }
+      
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+      
+      .tabs {
+        flex-direction: column;
+      }
+      
+      .period-selector {
+        flex-wrap: wrap;
+      }
+
+      .date-navigation {
+        max-width: 100%;
+      }
+
+      .grid-wide {
+        flex-direction: column;
+      }
+
+      .grid-wide > .card {
+        min-width: auto;
+        max-width: none;
+      }
+    }
+
+    /* Loading Animation */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .loading {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-light);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <i class="fas fa-coffee"></i>
+        카페 사업장부
+      </div>
+      <div id="userInfo" class="user-info hidden">
+        <span id="userEmail" class="text-muted">로그인 필요</span>
+        <span id="roleTag" class="role-badge">
+          <i class="fas fa-user"></i>
+          <span>role: -</span>
+        </span>
+        <button id="logoutBtn" class="btn btn-secondary">
+          <i class="fas fa-sign-out-alt"></i>
+          로그아웃
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Login Page -->
+  <div id="loginPage" class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1 class="auth-title">로그인</h1>
+        <p class="auth-subtitle">계정에 로그인하여 사업장부를 관리하세요</p>
+      </div>
+      
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label">이메일</label>
+          <input id="loginEmail" type="email" class="form-input" placeholder="이메일을 입력하세요" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">비밀번호</label>
+          <input id="loginPassword" type="password" class="form-input" placeholder="비밀번호를 입력하세요" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          <i class="fas fa-sign-in-alt"></i>
+          로그인
+        </button>
+      </form>
+      
+      <div class="auth-switch">
+        <span class="text-muted">계정이 없으신가요? </span>
+        <a id="showSignup" class="auth-link">회원가입</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signup Page -->
+  <div id="signupPage" class="auth-container hidden">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1 class="auth-title">회원가입</h1>
+        <p class="auth-subtitle">새 계정을 만들어 사업장부를 시작하세요</p>
+      </div>
+      
+      <form id="signupForm">
+        <div class="form-group">
+          <label class="form-label">이메일 *</label>
+          <input id="signupEmail" type="email" class="form-input" placeholder="이메일을 입력하세요" required>
+          <div id="emailError" class="error">올바른 이메일 형식을 입력해주세요</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">비밀번호 *</label>
+          <input id="signupPassword" type="password" class="form-input" placeholder="비밀번호 (6자 이상)" required>
+          <div id="passwordError" class="error">비밀번호는 6자 이상이어야 합니다</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">비밀번호 확인 *</label>
+          <input id="signupConfirmPassword" type="password" class="form-input" placeholder="비밀번호를 다시 입력하세요" required>
+          <div id="confirmPasswordError" class="error">비밀번호가 일치하지 않습니다</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">이름 *</label>
+          <input id="signupName" type="text" class="form-input" placeholder="이름을 입력하세요" required>
+          <div id="nameError" class="error">이름을 입력해주세요</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">연락처</label>
+          <input id="signupPhone" type="tel" class="form-input" placeholder="010-1234-5678">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">생년월일</label>
+          <input id="signupBirthdate" type="date" class="form-input">
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          <i class="fas fa-user-plus"></i>
+          회원가입
+        </button>
+      </form>
+      
+      <div class="auth-switch">
+        <span class="text-muted">이미 계정이 있으신가요? </span>
+        <a id="showLogin" class="auth-link">로그인</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="mainApp" class="hidden">
+    <div class="container">
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="dashboard">
+          <i class="fas fa-chart-line"></i>
+          대시보드
+        </button>
+        <button class="tab" data-tab="sales">
+          <i class="fas fa-cash-register"></i>
+          매출 관리
+        </button>
+        <button class="tab" data-tab="purchases">
+          <i class="fas fa-shopping-cart"></i>
+          매입 관리
+        </button>
+      </div>
+
+      <!-- Dashboard Tab -->
+      <div id="dashboardTab" class="tab-content">
+        <!-- Period Selector -->
+        <div class="period-selector">
+          <button class="period-btn active" data-period="daily">일별</button>
+          <button class="period-btn" data-period="monthly">월별</button>
+          <button class="period-btn" data-period="custom">월 범위</button>
+        </div>
+
+        <!-- Date Controls -->
+        <div class="card mb-4">
+          <div id="dailyControls" class="date-controls">
+            <label class="form-label">조회 날짜</label>
+            <div class="date-navigation-enhanced">
+              <div class="date-input-container">
+                <input id="dashboardDate" type="date" class="form-input date-input">
+                <button type="button" class="date-calendar-btn" id="openCalendar">
+                  <i class="fas fa-calendar-alt"></i>
+                </button>
+              </div>
+              <button type="button" class="date-nav-btn today-btn" id="todayDashBtn">
+                오늘
+              </button>
+              <button type="button" class="date-nav-btn" id="prevDayBtn">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button type="button" class="date-nav-btn" id="nextDayBtn">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div id="monthlyControls" class="date-controls hidden">
+            <label class="form-label">조회 월</label>
+            <div class="date-navigation-enhanced">
+              <div class="date-input-container">
+                <input id="dashboardMonth" type="month" class="form-input date-input">
+              </div>
+              <button type="button" class="date-nav-btn today-btn" id="thisMonthBtn">
+                이번달
+              </button>
+              <button type="button" class="date-nav-btn" id="prevMonthBtn">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button type="button" class="date-nav-btn" id="nextMonthBtn">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div id="customControls" class="date-controls hidden">
+            <div class="grid grid-2" style="gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label">시작 월</label>
+                <select id="customStartMonth" class="form-select">
+                  <!-- Options will be populated by JavaScript -->
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">종료 월</label>
+                <select id="customEndMonth" class="form-select">
+                  <!-- Options will be populated by JavaScript -->
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metrics -->
+        <div class="grid grid-3 mb-4">
+          <div class="metric-card">
+            <div class="metric-label">총 매출</div>
+            <div class="metric-value" id="totalSales">₩0</div>
+            <div class="metric-change metric-positive">
+              <i class="fas fa-arrow-up"></i>
+              전월 대비
+            </div>
+          </div>
+          
+          <div class="metric-card">
+            <div class="metric-label">총 매입</div>
+            <div class="metric-value" id="totalPurchases">₩0</div>
+            <div class="metric-change metric-negative">
+              <i class="fas fa-arrow-down"></i>
+              전월 대비
+            </div>
+          </div>
+          
+          <div class="metric-card">
+            <div class="metric-label">영업이익</div>
+            <div class="metric-value" id="totalProfit">₩0</div>
+            <div class="metric-change metric-positive">
+              <i class="fas fa-chart-line"></i>
+              수익률
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Tables (일별/월별 모드) -->
+        <div id="standardLayout" class="grid grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-cash-register"></i>
+                매출 현황
+              </h3>
+            </div>
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>일자</th>
+                    <th>채널</th>
+                    <th>금액</th>
+                    <th>메모</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboardSalesTable">
+                  <tr>
+                    <td colspan="4" class="text-center text-muted">데이터가 없습니다</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-shopping-cart"></i>
+                매입 현황
+              </h3>
+            </div>
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>카테고리</th>
+                    <th>금액</th>
+                    <th>메모</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboardPurchasesTable">
+                  <tr>
+                    <td colspan="3" class="text-center text-muted">데이터가 없습니다</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Tables (월 범위 모드 - 비교 분석) -->
+        <div id="customLayout" class="hidden">
+          <!-- 월별 매출 비교 -->
+          <div id="monthlySalesCard" class="card mb-4">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-calendar-alt"></i>
+                월별 매출 비교
+              </h3>
+            </div>
+            <div id="monthlyComparisonContent" style="padding: 1.5rem;">
+              <!-- 월별 비교 차트가 여기에 표시됩니다 -->
+            </div>
+          </div>
+          
+          <!-- 월별 채널 비교 -->
+          <div id="monthlyChannelCard" class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-chart-bar"></i>
+                월별 채널 비교
+              </h3>
+            </div>
+            <div id="monthlyChannelContent" style="padding: 1.5rem;">
+              <!-- 월별 채널 비교가 여기에 표시됩니다 -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sales Tab -->
+      <div id="salesTab" class="tab-content hidden">
+        <!-- Sales Input Form (Admin Only) -->
+        <div id="salesForm" class="card mb-4 admin-only hidden">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-plus-circle"></i>
+              매출 입력
+            </h3>
+          </div>
+          
+          <form id="salesInputForm">
+            <div class="form-group mb-4">
+              <label class="form-label">날짜</label>
+              <div class="date-navigation">
+                <button type="button" class="date-nav-btn" id="prevDateBtn">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <input id="salesDate" type="date" class="form-input" required style="flex: 1;">
+                <button type="button" class="date-nav-btn today-btn" id="todayBtn">
+                  오늘
+                </button>
+                <button type="button" class="date-nav-btn" id="nextDateBtn">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="grid grid-2" style="gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label">오프라인</label>
+                <input id="sales_오프라인" type="number" class="form-input" placeholder="0">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">배달의민족</label>
+                <input id="sales_배달의민족" type="number" class="form-input" placeholder="0">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">쿠팡이츠</label>
+                <input id="sales_쿠팡이츠" type="number" class="form-input" placeholder="0">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">땡겨요</label>
+                <input id="sales_땡겨요" type="number" class="form-input" placeholder="0">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">네이버주문</label>
+                <input id="sales_네이버주문" type="number" class="form-input" placeholder="0">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">단체주문</label>
+                <input id="sales_단체주문" type="number" class="form-input" placeholder="0">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">강의</label>
+                <input id="sales_강의" type="number" class="form-input" placeholder="0">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">기타</label>
+                <input id="sales_기타" type="number" class="form-input" placeholder="0">
+              </div>
+            </div>
+            
+            <div class="form-group mb-4 mt-4">
+              <label class="form-label">메모</label>
+              <input id="salesMemo" type="text" class="form-input" placeholder="전체 메모 (선택사항)">
+            </div>
+            
+            <!-- 실시간 합계 표시 -->
+            <div id="salesSummary" class="mb-4" style="display: none; padding: 1rem; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius); text-align: center;">
+              <span style="font-size: 0.875rem; color: var(--text-muted);">입력 중인 총 매출:</span>
+              <div id="salesTotal" style="font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-top: 0.5rem;">₩0</div>
+            </div>
+            
+            <button type="submit" class="btn btn-success">
+              <i class="fas fa-save"></i>
+              저장
+            </button>
+          </form>
+        </div>
+
+        <!-- Sales List -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-list"></i>
+              매출 내역
+            </h3>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <div class="form-group" style="margin: 0; min-width: 200px;">
+                <select id="salesMonthSelect" class="form-select">
+                  <!-- Options will be populated by JavaScript -->
+                </select>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button id="downloadSalesExcel" class="btn btn-secondary">
+                  <i class="fas fa-download"></i>
+                  엑셀 다운로드
+                </button>
+                <button id="downloadSalesTemplate" class="btn btn-secondary">
+                  <i class="fas fa-file-excel"></i>
+                  양식 다운로드
+                </button>
+                <button id="uploadSalesExcel" class="btn btn-secondary admin-only hidden">
+                  <i class="fas fa-upload"></i>
+                  엑셀 업로드
+                </button>
+                <input type="file" id="salesFileInput" accept=".xlsx,.xls" style="display: none;" class="admin-only">
+              </div>
+            </div>
+          </div>
+          
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>일자</th>
+                  <th>채널</th>
+                  <th>금액</th>
+                  <th>메모</th>
+                  <th class="admin-only hidden">작업</th>
+                </tr>
+              </thead>
+              <tbody id="salesTable">
+                <tr>
+                  <td colspan="5" class="text-center text-muted">데이터가 없습니다</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Purchases Tab -->
+      <div id="purchasesTab" class="tab-content hidden">
+        <!-- Purchases Input Form (Admin Only) -->
+        <div id="purchasesForm" class="card mb-4 admin-only hidden">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-plus-circle"></i>
+              매입 입력
+            </h3>
+          </div>
+          
+          <form id="purchasesInputForm">
+            <div class="form-group mb-4">
+              <label class="form-label">월</label>
+              <select id="purchasesMonth" class="form-select" required style="max-width: 200px;">
+                <!-- Options will be populated by JavaScript -->
+              </select>
+            </div>
+            
+            <!-- 고정비 -->
+            <div class="card" style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); margin-bottom: 1.5rem;">
+              <div class="card-header" style="border-bottom: 1px solid rgba(99, 102, 241, 0.2); padding: 1rem;">
+                <h4 style="margin: 0; color: var(--primary-light);">
+                  <i class="fas fa-home"></i>
+                  고정비
+                </h4>
+              </div>
+              <div style="padding: 1.5rem;">
+                <div class="grid grid-3" style="gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label">월세</label>
+                    <input id="purchase_고정비_월세" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">인건비</label>
+                    <input id="purchase_고정비_인건비" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">캡스</label>
+                    <input id="purchase_고정비_캡스" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">세스코</label>
+                    <input id="purchase_고정비_세스코" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">통신비</label>
+                    <input id="purchase_고정비_통신비" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">사대보험료</label>
+                    <input id="purchase_고정비_사대보험료" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">화재보험료</label>
+                    <input id="purchase_고정비_화재보험료" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">포스기</label>
+                    <input id="purchase_고정비_포스기" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">관리비</label>
+                    <input id="purchase_고정비_관리비" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">배민광고비</label>
+                    <input id="purchase_고정비_배민광고비" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">선불카드프로그램</label>
+                    <input id="purchase_고정비_선불카드프로그램" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">기장료</label>
+                    <input id="purchase_고정비_기장료" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">광고비</label>
+                    <input id="purchase_고정비_광고비" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">포스관리비</label>
+                    <input id="purchase_고정비_포스관리비" type="number" class="form-input" placeholder="0">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 재료비 -->
+            <div class="card" style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 1.5rem;">
+              <div class="card-header" style="border-bottom: 1px solid rgba(16, 185, 129, 0.2); padding: 1rem;">
+                <h4 style="margin: 0; color: var(--secondary);">
+                  <i class="fas fa-coffee"></i>
+                  재료비
+                </h4>
+              </div>
+              <div style="padding: 1.5rem;">
+                <div class="grid grid-3" style="gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label">본점 납품</label>
+                    <input id="purchase_재료비_본점 납품" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">운영비 카드</label>
+                    <input id="purchase_재료비_운영비 카드" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">젤라또매입</label>
+                    <input id="purchase_재료비_젤라또매입" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">우유&생크림</label>
+                    <input id="purchase_재료비_우유&생크림" type="number" class="form-input" placeholder="0">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 세금 -->
+            <div class="card" style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); margin-bottom: 1.5rem;">
+              <div class="card-header" style="border-bottom: 1px solid rgba(245, 158, 11, 0.2); padding: 1rem;">
+                <h4 style="margin: 0; color: var(--warning);">
+                  <i class="fas fa-receipt"></i>
+                  세금
+                </h4>
+              </div>
+              <div style="padding: 1.5rem;">
+                <div class="grid grid-3" style="gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label">전기세</label>
+                    <input id="purchase_세금_전기세" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">국세</label>
+                    <input id="purchase_세금_국세" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">원천세 반기신고</label>
+                    <input id="purchase_세금_원천세 반기신고" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">부가세</label>
+                    <input id="purchase_세금_부가세" type="number" class="form-input" placeholder="0">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 수수료 -->
+            <div class="card" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); margin-bottom: 1.5rem;">
+              <div class="card-header" style="border-bottom: 1px solid rgba(239, 68, 68, 0.2); padding: 1rem;">
+                <h4 style="margin: 0; color: var(--danger);">
+                  <i class="fas fa-percentage"></i>
+                  수수료
+                </h4>
+              </div>
+              <div style="padding: 1.5rem;">
+                <div class="grid grid-3" style="gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label">배민</label>
+                    <input id="purchase_수수료_배민" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">쿠팡</label>
+                    <input id="purchase_수수료_쿠팡" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">네이버</label>
+                    <input id="purchase_수수료_네이버" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">토스</label>
+                    <input id="purchase_수수료_토스" type="number" class="form-input" placeholder="0">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 그외 유동비 -->
+            <div class="card" style="background: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.2); margin-bottom: 1.5rem;">
+              <div class="card-header" style="border-bottom: 1px solid rgba(168, 85, 247, 0.2); padding: 1rem;">
+                <h4 style="margin: 0; color: #a855f7;">
+                  <i class="fas fa-cogs"></i>
+                  그외 유동비
+                </h4>
+              </div>
+              <div style="padding: 1.5rem;">
+                <div class="grid grid-3" style="gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label">관리비</label>
+                    <input id="purchase_그외 유동비_관리비" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">주차비</label>
+                    <input id="purchase_그외 유동비_주차비" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">배달 페이</label>
+                    <input id="purchase_그외 유동비_배달 페이" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">수리비</label>
+                    <input id="purchase_그외 유동비_수리비" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">유지보수비</label>
+                    <input id="purchase_그외 유동비_유지보수비" type="number" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">기타</label>
+                    <input id="purchase_그외 유동비_기타" type="number" class="form-input" placeholder="0">
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn btn-success">
+              <i class="fas fa-save"></i>
+              저장
+            </button>
+          </form>
+        </div>
+
+        <!-- Purchases List -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-list"></i>
+              매입 내역
+            </h3>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <div class="form-group" style="margin: 0; min-width: 200px;">
+                <select id="purchasesMonthSelect" class="form-select">
+                  <!-- Options will be populated by JavaScript -->
+                </select>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button id="downloadPurchasesExcel" class="btn btn-secondary">
+                  <i class="fas fa-download"></i>
+                  엑셀 다운로드
+                </button>
+                <button id="downloadPurchasesTemplate" class="btn btn-secondary admin-only hidden">
+                  <i class="fas fa-file-excel"></i>
+                  양식 다운로드
+                </button>
+                <button id="uploadPurchasesExcel" class="btn btn-secondary admin-only hidden">
+                  <i class="fas fa-upload"></i>
+                  엑셀 업로드
+                </button>
+                <input type="file" id="purchasesFileInput" accept=".xlsx,.xls" style="display: none;" class="admin-only">
+              </div>
+            </div>
+          </div>
+          
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>그룹</th>
+                  <th>카테고리</th>
+                  <th>금액</th>
+                  <th>메모</th>
+                  <th class="admin-only hidden">작업</th>
+                </tr>
+              </thead>
+              <tbody id="purchasesTable">
+                <tr>
+                  <td colspan="5" class="text-center text-muted">데이터가 없습니다</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast">
+    <span id="toastMessage"></span>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Firebase 설정
+    const firebaseConfig = {
+      apiKey: "AIzaSyDRlj9i5Fgj7nBwDWANBeZ15V2D2r7Tyko",
+      authDomain: "cafe-ledger.firebaseapp.com",
+      projectId: "cafe-ledger",
+      storageBucket: "cafe-ledger.firebasestorage.app",
+      messagingSenderId: "297376276964",
+      appId: "1:297376276964:web:52a483acff759a3e21e7f1",
+      measurementId: "G-XT6XGYTHGH"
+    };
+
+    // SDK 로드
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getFirestore, doc, getDoc, setDoc, addDoc, deleteDoc, collection, query, where, orderBy, getDocs, serverTimestamp, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // 상수
+    const ADMIN_EMAIL = 'jsicoffee@naver.com';
+    const PURCHASE_GROUPS = {
+      "고정비": ["월세","인건비","캡스","세스코","통신비","사대보험료","화재보험료","포스기","관리비","배민광고비","선불카드프로그램","기장료","광고비","포스관리비"],
+      "재료비": ["본점 납품","운영비 카드","젤라또매입","우유&생크림"],
+      "세금": ["전기세","국세","원천세 반기신고","부가세"],
+      "수수료": ["배민","쿠팡","네이버","토스"],
+      "그외 유동비": ["관리비","주차비","배달 페이","수리비","유지보수비","기타"]
+    };
+
+    // 전역 변수
+    let currentUser = null;
+    let isAdmin = false;
+    let currentPeriod = 'daily';
+
+    // DOM 요소
+    const $ = (id) => document.getElementById(id);
+
+    // 유틸리티 함수
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('ko-KR', {
+        style: 'currency',
+        currency: 'KRW'
+      }).format(amount || 0);
+    }
+
+    function showToast(message) {
+      const toast = $('toast');
+      const toastMessage = $('toastMessage');
+      toastMessage.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function showError(fieldId, message) {
+      const errorEl = document.getElementById(fieldId + 'Error');
+      if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.classList.add('show');
+      }
+    }
+
+    function clearErrors() {
+      document.querySelectorAll('.error').forEach(el => el.classList.remove('show'));
+    }
+
+    function getRecentMonths(count = 24) {
+      const months = [];
+      const now = new Date();
+      for (let i = 0; i < count; i++) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        months.push(`${year}-${month}`);
+      }
+      return months;
+    }
+
+    function getRecentDays(count = 365) {
+      const days = [];
+      const now = new Date();
+      for (let i = 0; i < count; i++) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        days.push(date.toISOString().split('T')[0]);
+      }
+      return days;
+    }
+
+    // 인증 관련 함수
+    function validateEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function validateSignupForm() {
+      clearErrors();
+      let isValid = true;
+
+      const email = $('signupEmail').value.trim();
+      const password = $('signupPassword').value;
+      const confirmPassword = $('signupConfirmPassword').value;
+      const name = $('signupName').value.trim();
+
+      if (!email || !validateEmail(email)) {
+        showError('email', '올바른 이메일 형식을 입력해주세요');
+        isValid = false;
+      }
+
+      if (!password || password.length < 6) {
+        showError('password', '비밀번호는 6자 이상이어야 합니다');
+        isValid = false;
+      }
+
+      if (password !== confirmPassword) {
+        showError('confirmPassword', '비밀번호가 일치하지 않습니다');
+        isValid = false;
+      }
+
+      if (!name) {
+        showError('name', '이름을 입력해주세요');
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    // 실시간 매출 합계 계산 함수
+    function updateSalesTotal() {
+      const channels = ['오프라인', '배달의민족', '쿠팡이츠', '땡겨요', '네이버주문', '단체주문', '강의', '기타'];
+      let total = 0;
+      let hasValue = false;
+
+      channels.forEach(channel => {
+        const value = parseInt($(`sales_${channel}`).value) || 0;
+        total += value;
+        if (value > 0) hasValue = true;
+      });
+
+      const summaryDiv = $('salesSummary');
+      const totalDiv = $('salesTotal');
+
+      if (hasValue && total > 0) {
+        summaryDiv.style.display = 'block';
+        totalDiv.textContent = formatCurrency(total);
+      } else {
+        summaryDiv.style.display = 'none';
+      }
+    }
+
+    // 매출 합계 표시 숨기기
+    function hideSalesTotal() {
+      const summaryDiv = $('salesSummary');
+      summaryDiv.style.display = 'none';
+    }
+
+    // 한국 시간 기준 오늘 날짜 가져오기
+    function getKoreanToday() {
+      const now = new Date();
+      const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
+      return koreaTime.toISOString().split('T')[0];
+    }
+
+    // 한국 시간 기준 현재 월 가져오기
+    function getKoreanCurrentMonth() {
+      const now = new Date();
+      const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
+      const year = koreaTime.getFullYear();
+      const month = String(koreaTime.getMonth() + 1).padStart(2, '0');
+      return `${year}-${month}`;
+    }
+
+    // 날짜 조작 함수
+    function addDays(dateString, days) {
+      const date = new Date(dateString);
+      date.setDate(date.getDate() + days);
+      return date.toISOString().split('T')[0];
+    }
+
+    // 월 조작 함수
+    function addMonths(monthString, months) {
+      const [year, month] = monthString.split('-').map(Number);
+      const date = new Date(year, month - 1 + months, 1);
+      const newYear = date.getFullYear();
+      const newMonth = String(date.getMonth() + 1).padStart(2, '0');
+      return `${newYear}-${newMonth}`;
+    }
+
+    // 매출 날짜와 조회 월 동기화 함수
+    function syncSalesMonthFromDate() {
+      const salesDate = $('salesDate').value;
+      if (salesDate) {
+        const month = salesDate.slice(0, 7); // YYYY-MM 형식
+        $('salesMonthSelect').value = month;
+        loadSalesData(); // 자동으로 데이터 새로고침
+      }
+    }
+
+    // 초기화 함수
+    function initializeSelects() {
+      // 매출 월 선택
+      const salesMonthSelect = $('salesMonthSelect');
+      const months = getRecentMonths();
+      salesMonthSelect.innerHTML = months.map(month => 
+        `<option value="${month}">${month}</option>`
+      ).join('');
+
+      // 매입 월 선택 (입력용)
+      const purchasesMonth = $('purchasesMonth');
+      purchasesMonth.innerHTML = months.map(month => 
+        `<option value="${month}">${month}</option>`
+      ).join('');
+
+      // 매입 월 선택 (조회용)
+      const purchasesMonthSelect = $('purchasesMonthSelect');
+      purchasesMonthSelect.innerHTML = months.map(month => 
+        `<option value="${month}">${month}</option>`
+      ).join('');
+
+      // 커스텀 월 범위 선택
+      const customStartMonth = $('customStartMonth');
+      const customEndMonth = $('customEndMonth');
+      const allMonths = getRecentMonths(36); // 3년치
+      
+      customStartMonth.innerHTML = allMonths.map(month => 
+        `<option value="${month}">${month}</option>`
+      ).join('');
+      customEndMonth.innerHTML = allMonths.map(month => 
+        `<option value="${month}">${month}</option>`
+      ).join('');
+
+      // 오늘 날짜 설정 (한국 시간 기준)
+      const today = getKoreanToday();
+      const currentMonth = getKoreanCurrentMonth();
+      
+      $('salesDate').value = today;
+      $('dashboardDate').value = today;
+      $('dashboardMonth').value = currentMonth;
+      
+      // 매출 조회 월도 현재 월로 설정
+      $('salesMonthSelect').value = currentMonth;
+    }
+
+    // 기간 컨트롤 표시/숨김
+    function updatePeriodControls() {
+      console.log('updatePeriodControls 호출됨, currentPeriod:', currentPeriod);
+      
+      const dailyControls = $('dailyControls');
+      const monthlyControls = $('monthlyControls');
+      const customControls = $('customControls');
+      const standardLayout = $('standardLayout');
+      const customLayout = $('customLayout');
+
+      // 모든 컨트롤 숨기기
+      dailyControls.classList.add('hidden');
+      monthlyControls.classList.add('hidden');
+      customControls.classList.add('hidden');
+      
+      // 레이아웃 초기화
+      standardLayout.classList.add('hidden');
+      customLayout.classList.add('hidden');
+
+      // 현재 기간에 맞는 컨트롤과 레이아웃 표시
+      switch (currentPeriod) {
+        case 'daily':
+          console.log('일별 컨트롤 표시');
+          dailyControls.classList.remove('hidden');
+          standardLayout.classList.remove('hidden');
+          break;
+        case 'monthly':
+          console.log('월별 컨트롤 표시');
+          monthlyControls.classList.remove('hidden');
+          standardLayout.classList.remove('hidden');
+          break;
+        case 'custom':
+          console.log('커스텀 컨트롤 표시');
+          customControls.classList.remove('hidden');
+          customLayout.classList.remove('hidden');
+          break;
+      }
+    }
+
+    // 엑셀 다운로드 함수들
+    async function downloadSalesExcel() {
+      const month = $('salesMonthSelect').value;
+      
+      try {
+        const q = query(
+          collection(db, 'sales'),
+          where('ym', '==', month)
+        );
+        
+        const snapshot = await getDocs(q);
+        const salesData = [];
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          salesData.push({
+            '날짜': data.sales_date || '',
+            '채널': data.channel || '',
+            '금액': data.amount || 0,
+            '메모': data.memo || ''
+          });
+        });
+
+        if (salesData.length === 0) {
+          showToast('다운로드할 데이터가 없습니다');
+          return;
+        }
+
+        // 엑셀 파일 생성
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(salesData);
+        XLSX.utils.book_append_sheet(wb, ws, '매출내역');
+        
+        // 파일 다운로드
+        XLSX.writeFile(wb, `매출내역_${month}.xlsx`);
+        showToast('엑셀 파일이 다운로드되었습니다');
+        
+      } catch (error) {
+        console.error('Excel download error:', error);
+        showToast('엑셀 다운로드 중 오류가 발생했습니다');
+      }
+    }
+
+    async function downloadPurchasesExcel() {
+      const month = $('purchasesMonthSelect').value;
+      
+      try {
+        const q = query(
+          collection(db, 'purchases'),
+          where('ym', '==', month)
+        );
+        
+        const snapshot = await getDocs(q);
+        const purchasesData = [];
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          purchasesData.push({
+            '그룹': data.group_name || '',
+            '카테고리': data.category || '',
+            '금액': data.amount || 0,
+            '메모': data.memo || ''
+          });
+        });
+
+        if (purchasesData.length === 0) {
+          showToast('다운로드할 데이터가 없습니다');
+          return;
+        }
+
+        // 엑셀 파일 생성
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(purchasesData);
+        XLSX.utils.book_append_sheet(wb, ws, '매입내역');
+        
+        // 파일 다운로드
+        XLSX.writeFile(wb, `매입내역_${month}.xlsx`);
+        showToast('엑셀 파일이 다운로드되었습니다');
+        
+      } catch (error) {
+        console.error('Excel download error:', error);
+        showToast('엑셀 다운로드 중 오류가 발생했습니다');
+      }
+    }
+
+    async function downloadSalesTemplate() {
+      try {
+        // 가로 형태의 템플릿 데이터 생성
+        const templateData = [];
+        
+        // 헤더 행 (예시로 며칠간의 날짜 제공)
+        const today = new Date();
+        for (let i = 0; i < 7; i++) {
+          const date = new Date(today);
+          date.setDate(date.getDate() + i);
+          const dateStr = date.toISOString().split('T')[0];
+          
+          templateData.push({
+            '날짜': dateStr,
+            '오프라인': 0,
+            '배달의민족': 0,
+            '쿠팡이츠': 0,
+            '땡겨요': 0,
+            '네이버주문': 0,
+            '단체주문': 0,
+            '강의': 0,
+            '기타': 0,
+            '메모': ''
+          });
+        }
+
+        // 엑셀 파일 생성
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(templateData);
+        
+        // 컬럼 너비 설정
+        ws['!cols'] = [
+          { wch: 12 }, // 날짜
+          { wch: 10 }, // 오프라인
+          { wch: 12 }, // 배달의민족
+          { wch: 10 }, // 쿠팡이츠
+          { wch: 8 },  // 땡겨요
+          { wch: 12 }, // 네이버주문
+          { wch: 10 }, // 단체주문
+          { wch: 8 },  // 강의
+          { wch: 8 },  // 기타
+          { wch: 20 }  // 메모
+        ];
+        
+        XLSX.utils.book_append_sheet(wb, ws, '매출양식');
+        
+        // 파일 다운로드
+        XLSX.writeFile(wb, '매출양식.xlsx');
+        showToast('매출 양식이 다운로드되었습니다 (가로형식)');
+        
+      } catch (error) {
+        console.error('Sales template download error:', error);
+        showToast('양식 다운로드 중 오류가 발생했습니다');
+      }
+    }
+
+    async function downloadPurchasesTemplate() {
+      try {
+        const templateData = [];
+        
+        Object.keys(PURCHASE_GROUPS).forEach(groupName => {
+          PURCHASE_GROUPS[groupName].forEach(category => {
+            templateData.push({
+              '그룹': groupName,
+              '카테고리': category,
+              '금액': 0,
+              '메모': ''
+            });
+          });
+        });
+
+        // 엑셀 파일 생성
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(templateData);
+        XLSX.utils.book_append_sheet(wb, ws, '매입양식');
+        
+        // 파일 다운로드
+        XLSX.writeFile(wb, '매입양식.xlsx');
+        showToast('매입 양식이 다운로드되었습니다');
+        
+      } catch (error) {
+        console.error('Template download error:', error);
+        showToast('양식 다운로드 중 오류가 발생했습니다');
+      }
+    }
+
+    // 날짜 형식 변환 유틸리티 함수
+    function formatDateString(dateValue) {
+      if (!dateValue) return null;
+      
+      // 이미 문자열 형태인 경우
+      if (typeof dateValue === 'string') {
+        // YYYY-MM-DD 형식인지 확인
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+          return dateValue;
+        }
+        // 다른 문자열 형식이면 Date로 변환 시도
+        const date = new Date(dateValue);
+        if (!isNaN(date.getTime())) {
+          return date.toISOString().split('T')[0];
+        }
+      }
+      
+      // Date 객체인 경우
+      if (dateValue instanceof Date) {
+        return dateValue.toISOString().split('T')[0];
+      }
+      
+      // 숫자인 경우 (Excel 날짜 시리얼 번호)
+      if (typeof dateValue === 'number') {
+        // Excel 기준일 (1900-01-01)부터의 일수
+        const excelEpoch = new Date(1900, 0, 1);
+        const date = new Date(excelEpoch.getTime() + (dateValue - 2) * 24 * 60 * 60 * 1000);
+        if (!isNaN(date.getTime())) {
+          return date.toISOString().split('T')[0];
+        }
+      }
+      
+      return null;
+    }
+
+    // 숫자 값 처리 유틸리티 함수
+    function parseNumber(value) {
+      if (value === null || value === undefined || value === '' || isNaN(value)) {
+        return 0;
+      }
+      return parseInt(value) || 0;
+    }
+
+    async function uploadSalesExcel(event) {
+      if (!isAdmin) {
+        showToast('관리자만 업로드할 수 있습니다');
+        return;
+      }
+
+      const file = event.target.files[0];
+      if (!file) return;
+
+      try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        if (jsonData.length === 0) {
+          showToast('업로드할 데이터가 없습니다');
+          return;
+        }
+
+        // 데이터 변환 및 저장
+        const salesData = [];
+        const processedDates = new Set();
+        const salesChannels = ['오프라인', '배달의민족', '쿠팡이츠', '땡겨요', '네이버주문', '단체주문', '강의', '기타'];
+
+        for (const row of jsonData) {
+          const rawDate = row['날짜'] || row['date'] || '';
+          const salesDate = formatDateString(rawDate);
+          const memo = row['메모'] || row['memo'] || '';
+
+          if (salesDate) {
+            // 기존 데이터 삭제 (같은 날짜) - 한 번만 실행
+            if (!processedDates.has(salesDate)) {
+              const existingQuery = query(
+                collection(db, 'sales'),
+                where('sales_date', '==', salesDate)
+              );
+              const existingSnapshot = await getDocs(existingQuery);
+              
+              const deletePromises = [];
+              existingSnapshot.forEach(doc => {
+                deletePromises.push(deleteDoc(doc.ref));
+              });
+              
+              if (deletePromises.length > 0) {
+                await Promise.all(deletePromises);
+              }
+              
+              processedDates.add(salesDate);
+            }
+
+            // 가로 형식 처리 - 각 채널별로 데이터 추출
+            salesChannels.forEach(channel => {
+              const amount = parseNumber(row[channel]);
+              if (amount > 0) {
+                salesData.push({
+                  sales_date: salesDate,
+                  channel: channel,
+                  amount: amount,
+                  memo: memo,
+                  ym: salesDate.slice(0, 7),
+                  createdAt: serverTimestamp()
+                });
+              }
+            });
+
+            // 세로 형식도 지원 (이전 버전과의 호환성)
+            const channel = row['채널'] || row['channel'] || '';
+            const amount = parseNumber(row['금액'] || row['amount']);
+            
+            if (channel && amount > 0 && salesChannels.includes(channel)) {
+              salesData.push({
+                sales_date: salesDate,
+                channel: channel,
+                amount: amount,
+                memo: memo,
+                ym: salesDate.slice(0, 7),
+                createdAt: serverTimestamp()
+              });
+            }
+          }
+        }
+
+        if (salesData.length === 0) {
+          showToast('유효한 매출 데이터가 없습니다');
+          return;
+        }
+
+        // 새 데이터 저장
+        const savePromises = salesData.map(data => addDoc(collection(db, 'sales'), data));
+        await Promise.all(savePromises);
+
+        showToast(`${salesData.length}건의 매출 데이터가 업로드되었습니다`);
+        
+        // 파일 입력 초기화
+        event.target.value = '';
+        
+        // 데이터 새로고침
+        await loadSalesData();
+        await loadDashboardData();
+        
+      } catch (error) {
+        console.error('Sales upload error:', error);
+        showToast('엑셀 업로드 중 오류가 발생했습니다: ' + error.message);
+      }
+    }
+
+    async function uploadPurchasesExcel(event) {
+      if (!isAdmin) {
+        showToast('관리자만 업로드할 수 있습니다');
+        return;
+      }
+
+      const file = event.target.files[0];
+      if (!file) return;
+
+      try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        if (jsonData.length === 0) {
+          showToast('업로드할 데이터가 없습니다');
+          return;
+        }
+
+        // 월 정보 가져오기
+        const ym = $('purchasesMonth').value;
+
+        // 기존 데이터 삭제
+        const existingQuery = query(
+          collection(db, 'purchases'),
+          where('ym', '==', ym)
+        );
+        const existingSnapshot = await getDocs(existingQuery);
+        
+        const deletePromises = [];
+        existingSnapshot.forEach(doc => {
+          deletePromises.push(deleteDoc(doc.ref));
+        });
+        
+        if (deletePromises.length > 0) {
+          await Promise.all(deletePromises);
+        }
+
+        // 데이터 변환 및 저장
+        const purchasesData = [];
+
+        for (const row of jsonData) {
+          const groupName = row['그룹'] || row['group'] || '';
+          const category = row['카테고리'] || row['category'] || '';
+          const amount = parseNumber(row['금액'] || row['amount']);
+          const memo = row['메모'] || row['memo'] || '';
+
+          if (groupName && category && amount > 0) {
+            purchasesData.push({
+              ym: ym,
+              group_name: groupName,
+              category: category,
+              amount: amount,
+              memo: memo,
+              createdAt: serverTimestamp()
+            });
+          }
+        }
+
+        if (purchasesData.length === 0) {
+          showToast('유효한 매입 데이터가 없습니다');
+          return;
+        }
+
+        // 새 데이터 저장
+        const savePromises = purchasesData.map(data => addDoc(collection(db, 'purchases'), data));
+        await Promise.all(savePromises);
+
+        showToast(`${purchasesData.length}건의 매입 데이터가 업로드되었습니다`);
+        
+        // 파일 입력 초기화
+        event.target.value = '';
+        
+        // 데이터 새로고침
+        await loadPurchasesData();
+        await loadDashboardData();
+        
+      } catch (error) {
+        console.error('Purchases upload error:', error);
+        showToast('엑셀 업로드 중 오류가 발생했습니다: ' + error.message);
+      }
+    }
+
+    // 데이터 조회 함수
+    async function loadDashboardData() {
+      try {
+        if (currentPeriod === 'daily') {
+          const selectedDate = $('dashboardDate').value;
+          const selectedMonth = selectedDate.slice(0, 7);
+          
+          // 메트릭용 쿼리 (월 전체)
+          const monthSalesQuery = query(
+            collection(db, 'sales'),
+            where('ym', '==', selectedMonth)
+          );
+          const monthPurchasesQuery = query(
+            collection(db, 'purchases'),
+            where('ym', '==', selectedMonth)
+          );
+          
+          // 테이블용 쿼리 (선택된 날짜만)
+          const daySalesQuery = query(
+            collection(db, 'sales'),
+            where('sales_date', '==', selectedDate)
+          );
+          
+          const [monthSalesSnapshot, monthPurchasesSnapshot, daySalesSnapshot] = await Promise.all([
+            getDocs(monthSalesQuery),
+            getDocs(monthPurchasesQuery),
+            getDocs(daySalesQuery)
+          ]);
+
+          // 월 전체 합계 계산 (메트릭용)
+          let totalSales = 0;
+          let totalPurchases = 0;
+          
+          monthSalesSnapshot.forEach(doc => {
+            const data = doc.data();
+            totalSales += data.amount || 0;
+          });
+
+          monthPurchasesSnapshot.forEach(doc => {
+            const data = doc.data();
+            totalPurchases += data.amount || 0;
+          });
+
+          // 선택된 날짜 데이터 (테이블용)
+          const daySalesData = [];
+          daySalesSnapshot.forEach(doc => {
+            const data = doc.data();
+            daySalesData.push({ id: doc.id, ...data });
+          });
+
+          // 클라이언트 사이드에서 정렬
+          daySalesData.sort((a, b) => {
+            if (a.sales_date && b.sales_date) {
+              return b.sales_date.localeCompare(a.sales_date);
+            }
+            return 0;
+          });
+
+          // 메트릭 업데이트 (월 합계)
+          $('totalSales').textContent = formatCurrency(totalSales);
+          $('totalPurchases').textContent = formatCurrency(totalPurchases);
+          $('totalProfit').textContent = formatCurrency(totalSales - totalPurchases);
+
+          // 선택된 날짜의 총 매출 계산
+          let dayTotalSales = 0;
+          daySalesData.forEach(item => {
+            dayTotalSales += item.amount || 0;
+          });
+
+          // 테이블 업데이트 (선택된 날짜만)
+          updateSalesTable(daySalesData, 'dashboardSalesTable');
+          
+          // 매입은 월 단위이므로 빈 테이블 표시
+          updatePurchasesTable([], 'dashboardPurchasesTable');
+          
+        } else if (currentPeriod === 'monthly') {
+          const selectedMonth = $('dashboardMonth').value;
+          
+          const salesQuery = query(
+            collection(db, 'sales'),
+            where('ym', '==', selectedMonth)
+          );
+          const purchasesQuery = query(
+            collection(db, 'purchases'),
+            where('ym', '==', selectedMonth)
+          );
+          
+          const [salesSnapshot, purchasesSnapshot] = await Promise.all([
+            getDocs(salesQuery),
+            getDocs(purchasesQuery)
+          ]);
+
+          let totalSales = 0;
+          let totalPurchases = 0;
+          const salesData = [];
+          const purchasesData = [];
+          const dailySalesMap = new Map(); // 일별 매출 집계용
+
+          salesSnapshot.forEach(doc => {
+            const data = doc.data();
+            totalSales += data.amount || 0;
+            salesData.push({ id: doc.id, ...data });
+            
+            // 일별 매출 집계
+            const date = data.sales_date;
+            if (date) {
+              dailySalesMap.set(date, (dailySalesMap.get(date) || 0) + (data.amount || 0));
+            }
+          });
+
+          purchasesSnapshot.forEach(doc => {
+            const data = doc.data();
+            totalPurchases += data.amount || 0;
+            purchasesData.push({ id: doc.id, ...data });
+          });
+
+          // 클라이언트 사이드에서 정렬
+          salesData.sort((a, b) => {
+            if (a.sales_date && b.sales_date) {
+              return b.sales_date.localeCompare(a.sales_date);
+            }
+            return 0;
+          });
+
+          // 메트릭 업데이트
+          $('totalSales').textContent = formatCurrency(totalSales);
+          $('totalPurchases').textContent = formatCurrency(totalPurchases);
+          $('totalProfit').textContent = formatCurrency(totalSales - totalPurchases);
+
+          // 테이블 업데이트
+          updateSalesTable(salesData, 'dashboardSalesTable');
+          updatePurchasesTable(purchasesData, 'dashboardPurchasesTable');
+          
+        } else if (currentPeriod === 'custom') {
+          const startMonth = $('customStartMonth').value;
+          const endMonth = $('customEndMonth').value;
+          
+          console.log('월 범위 조회:', startMonth, '~', endMonth);
+          
+          // 시작월과 종료월 사이의 모든 월 생성
+          const monthsInRange = getMonthsInRange(startMonth, endMonth);
+          console.log('조회할 월들:', monthsInRange);
+          
+          if (monthsInRange.length === 0) {
+            showToast('올바른 월 범위를 선택해주세요');
+            return;
+          }
+          
+          // 모든 월의 데이터를 순차적으로 조회
+          const allSalesData = [];
+          const allPurchasesData = [];
+          const channelSalesMap = new Map(); // 채널별 매출 집계용
+          const monthlySalesMap = new Map(); // 월별 매출 집계용
+          
+          for (const month of monthsInRange) {
+            console.log('월별 데이터 조회 중:', month);
+            
+            const salesQuery = query(
+              collection(db, 'sales'),
+              where('ym', '==', month)
+            );
+            const purchasesQuery = query(
+              collection(db, 'purchases'),
+              where('ym', '==', month)
+            );
+            
+            const [salesSnapshot, purchasesSnapshot] = await Promise.all([
+              getDocs(salesQuery),
+              getDocs(purchasesQuery)
+            ]);
+            
+            console.log(`${month} 매출 데이터: ${salesSnapshot.size}건`);
+            console.log(`${month} 매입 데이터: ${purchasesSnapshot.size}건`);
+            
+            let monthSales = 0;
+            salesSnapshot.forEach(doc => {
+              const data = doc.data();
+              allSalesData.push({ id: doc.id, ...data });
+              
+              // 채널별 매출 집계
+              const channel = data.channel;
+              if (channel) {
+                channelSalesMap.set(channel, (channelSalesMap.get(channel) || 0) + (data.amount || 0));
+              }
+              
+              // 월별 매출 집계
+              monthSales += data.amount || 0;
+            });
+            
+            // 월별 매출 저장
+            monthlySalesMap.set(month, monthSales);
+            
+            purchasesSnapshot.forEach(doc => {
+              allPurchasesData.push({ id: doc.id, ...doc.data() });
+            });
+          }
+          
+          console.log('총 매출 데이터:', allSalesData.length, '건');
+          console.log('총 매입 데이터:', allPurchasesData.length, '건');
+          
+          // 합계 계산 및 표시
+          let totalSales = 0;
+          let totalPurchases = 0;
+          
+          allSalesData.forEach(item => {
+            totalSales += item.amount || 0;
+          });
+          
+          allPurchasesData.forEach(item => {
+            totalPurchases += item.amount || 0;
+          });
+          
+          // 클라이언트 사이드에서 정렬
+          allSalesData.sort((a, b) => {
+            if (a.sales_date && b.sales_date) {
+              return b.sales_date.localeCompare(a.sales_date);
+            }
+            return 0;
+          });
+          
+          // 메트릭 업데이트
+          $('totalSales').textContent = formatCurrency(totalSales);
+          $('totalPurchases').textContent = formatCurrency(totalPurchases);
+          $('totalProfit').textContent = formatCurrency(totalSales - totalPurchases);
+          
+          // 월별 매출 비교 표시
+          updateMonthlyComparison(monthsInRange, monthlySalesMap, totalSales);
+          
+          // 월별 채널 비교 표시
+          updateMonthlyChannelComparison(monthsInRange, allSalesData);
+          
+          return; // 여기서 함수 종료
+        }
+
+      } catch (error) {
+        console.error('Dashboard data loading error:', error);
+        showToast('데이터 로딩 중 오류가 발생했습니다');
+      }
+    }
+
+    // 월 범위 생성 함수 (수정됨)
+    function getMonthsInRange(startMonth, endMonth) {
+      const months = [];
+      
+      if (!startMonth || !endMonth) {
+        console.log('시작월 또는 종료월이 없습니다:', startMonth, endMonth);
+        return [];
+      }
+      
+      const [startYear, startM] = startMonth.split('-').map(Number);
+      const [endYear, endM] = endMonth.split('-').map(Number);
+      
+      const start = new Date(startYear, startM - 1, 1);
+      const end = new Date(endYear, endM - 1, 1);
+      
+      console.log('월 범위 계산:', start, '~', end);
+      
+      if (start > end) {
+        console.log('시작월이 종료월보다 큽니다');
+        return [];
+      }
+      
+      const current = new Date(start);
+      while (current <= end) {
+        const year = current.getFullYear();
+        const month = String(current.getMonth() + 1).padStart(2, '0');
+        months.push(`${year}-${month}`);
+        current.setMonth(current.getMonth() + 1);
+      }
+      
+      console.log('생성된 월 목록:', months);
+      return months;
+    }
+
+    async function loadSalesData() {
+      const month = $('salesMonthSelect').value;
+      
+      try {
+        // 인덱스 없이 작동하도록 단순한 쿼리 사용
+        const q = query(
+          collection(db, 'sales'),
+          where('ym', '==', month)
+        );
+        
+        const snapshot = await getDocs(q);
+        const salesData = [];
+        
+        snapshot.forEach(doc => {
+          salesData.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // 클라이언트 사이드에서 정렬
+        salesData.sort((a, b) => {
+          if (a.sales_date && b.sales_date) {
+            return b.sales_date.localeCompare(a.sales_date);
+          }
+          return 0;
+        });
+        
+        updateSalesTable(salesData, 'salesTable', true);
+      } catch (error) {
+        console.error('Sales data loading error:', error);
+        showToast('매출 데이터 로딩 중 오류가 발생했습니다');
+      }
+    }
+
+    async function loadPurchasesData() {
+      const month = $('purchasesMonthSelect').value;
+      
+      try {
+        // 인덱스 없이 작동하도록 단순한 쿼리 사용
+        const q = query(
+          collection(db, 'purchases'),
+          where('ym', '==', month)
+        );
+        
+        const snapshot = await getDocs(q);
+        const purchasesData = [];
+        
+        snapshot.forEach(doc => {
+          purchasesData.push({ id: doc.id, ...doc.data() });
+        });
+        
+        updatePurchasesTable(purchasesData, 'purchasesTable', true);
+      } catch (error) {
+        console.error('Purchases data loading error:', error);
+        showToast('매입 데이터 로딩 중 오류가 발생했습니다');
+      }
+    }
+
+
+
+    // 월별 매출 비교 함수
+    function updateMonthlyComparison(monthsInRange, monthlySalesMap, totalSales) {
+      const content = $('monthlyComparisonContent');
+      
+      if (monthsInRange.length === 0) {
+        content.innerHTML = '<p class="text-center text-muted">월별 비교 데이터가 없습니다</p>';
+        return;
+      }
+
+      const monthlyData = monthsInRange.map((month, index) => {
+        const amount = monthlySalesMap.get(month) || 0;
+        const prevAmount = index > 0 ? (monthlySalesMap.get(monthsInRange[index - 1]) || 0) : 0;
+        const changeRate = prevAmount > 0 ? ((amount - prevAmount) / prevAmount * 100) : 0;
+        const changeIcon = changeRate > 0 ? '↗️' : changeRate < 0 ? '↘️' : '➡️';
+        const changeColor = changeRate > 0 ? 'var(--success)' : changeRate < 0 ? 'var(--danger)' : 'var(--text-muted)';
+        
+        return { month, amount, changeRate, changeIcon, changeColor, prevAmount };
+      });
+
+      const comparisonHtml = `
+        <div style="display: flex; gap: 2rem; overflow-x: auto; padding: 1rem 0;">
+          ${monthlyData.map(item => `
+            <div style="min-width: 280px; flex: 0 0 auto; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: var(--radius); padding: 1.5rem; text-align: center;">
+              <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">${item.month}</div>
+              <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 1rem;">${formatCurrency(item.amount)}</div>
+              ${item.prevAmount > 0 ? `
+                <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.875rem;">
+                  <span style="color: ${item.changeColor};">${item.changeIcon}</span>
+                  <span style="color: ${item.changeColor}; font-weight: 500;">${Math.abs(item.changeRate).toFixed(1)}%</span>
+                  <span style="color: var(--text-muted);">전월대비</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+                  전월: ${formatCurrency(item.prevAmount)}
+                </div>
+              ` : `
+                <div style="color: var(--text-muted); font-size: 0.875rem;">기준월</div>
+              `}
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      content.innerHTML = comparisonHtml;
+    }
+
+    // 월별 채널 비교 함수
+    function updateMonthlyChannelComparison(monthsInRange, allSalesData) {
+      const content = $('monthlyChannelContent');
+      
+      if (monthsInRange.length === 0) {
+        content.innerHTML = '<p class="text-center text-muted">월별 채널 비교 데이터가 없습니다</p>';
+        return;
+      }
+
+      // 각 월별, 채널별 매출 집계
+      const monthlyChannelData = {};
+      const allChannels = new Set();
+
+      allSalesData.forEach(item => {
+        const month = item.ym;
+        const channel = item.channel;
+        const amount = item.amount || 0;
+
+        if (month && channel) {
+          if (!monthlyChannelData[month]) {
+            monthlyChannelData[month] = {};
+          }
+          monthlyChannelData[month][channel] = (monthlyChannelData[month][channel] || 0) + amount;
+          allChannels.add(channel);
+        }
+      });
+
+      // 매출장부 입력 순서대로 채널 정렬
+      const channelOrder = ['오프라인', '배달의민족', '쿠팡이츠', '땡겨요', '네이버주문', '단체주문', '강의', '기타'];
+      const channelsArray = Array.from(allChannels).sort((a, b) => {
+        const aIndex = channelOrder.indexOf(a);
+        const bIndex = channelOrder.indexOf(b);
+        // 정의된 순서에 있는 채널은 해당 순서대로, 없는 채널은 맨 뒤로
+        if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        return aIndex - bIndex;
+      });
+
+      const channelColors = {
+        '오프라인': '#6366f1',
+        '배달의민족': '#10b981', 
+        '쿠팡이츠': '#f59e0b',
+        '땡겨요': '#ef4444',
+        '네이버주문': '#8b5cf6',
+        '단체주문': '#06b6d4',
+        '강의': '#84cc16',
+        '기타': '#6b7280'
+      };
+
+      const channelComparisonHtml = `
+        <div style="overflow-x: auto;">
+          <div style="display: flex; gap: 2rem; min-width: max-content; padding: 1rem 0;">
+            ${channelsArray.map(channel => `
+              <div style="min-width: 320px; flex: 0 0 auto; background: rgba(30, 41, 59, 0.8); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                  <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background: ${channelColors[channel] || '#6b7280'};"></div>
+                    ${channel}
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                  ${monthsInRange.map((month, index) => {
+                    const amount = monthlyChannelData[month]?.[channel] || 0;
+                    const prevAmount = index > 0 ? (monthlyChannelData[monthsInRange[index - 1]]?.[channel] || 0) : 0;
+                    const changeRate = prevAmount > 0 ? ((amount - prevAmount) / prevAmount * 100) : 0;
+                    const changeIcon = changeRate > 0 ? '↗️' : changeRate < 0 ? '↘️' : '➡️';
+                    const changeColor = changeRate > 0 ? 'var(--success)' : changeRate < 0 ? 'var(--danger)' : 'var(--text-muted)';
+                    
+                    return `
+                      <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(51, 65, 85, 0.3); border-radius: var(--radius);">
+                        <div>
+                          <div style="font-weight: 500; color: var(--text-primary);">${month}</div>
+                          <div style="font-size: 0.875rem; color: var(--text-muted);">${formatCurrency(amount)}</div>
+                        </div>
+                        ${prevAmount > 0 ? `
+                          <div style="text-align: right;">
+                            <div style="font-size: 0.8rem; color: ${changeColor};">
+                              ${changeIcon} ${Math.abs(changeRate).toFixed(1)}%
+                            </div>
+                          </div>
+                        ` : `
+                          <div style="font-size: 0.8rem; color: var(--text-muted);">기준</div>
+                        `}
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      content.innerHTML = channelComparisonHtml;
+    }
+
+    // 월별 매출 현황을 표시하는 함수
+    function updateMonthlySalesCard(monthsInRange, monthlySalesMap, totalSales) {
+      const tbody = $('monthlySalesTable');
+      
+      if (monthsInRange.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">데이터가 없습니다</td></tr>';
+        return;
+      }
+
+      const monthlyData = monthsInRange.map(month => {
+        const amount = monthlySalesMap.get(month) || 0;
+        const percentage = totalSales > 0 ? (amount / totalSales * 100) : 0;
+        return { month, amount, percentage };
+      });
+
+      // 전월 대비 증가율 계산
+      const rows = monthlyData.map((item, index) => {
+        const prevAmount = index > 0 ? monthlyData[index - 1].amount : 0;
+        const changeRate = prevAmount > 0 ? ((item.amount - prevAmount) / prevAmount * 100) : 0;
+        const changeIcon = changeRate > 0 ? '↗' : changeRate < 0 ? '↘' : '→';
+        const changeColor = changeRate > 0 ? 'var(--success)' : changeRate < 0 ? 'var(--danger)' : 'var(--text-muted)';
+        const changeText = index === 0 ? '-' : `${changeIcon} ${Math.abs(changeRate).toFixed(1)}%`;
+        
+        return `
+          <tr>
+            <td style="font-weight: 500;">${item.month}</td>
+            <td style="color: var(--primary); font-weight: 600;">${formatCurrency(item.amount)}</td>
+            <td style="color: ${changeColor}; font-size: 0.875rem;">${changeText}</td>
+            <td style="color: var(--text-muted); font-size: 0.875rem;">${item.percentage.toFixed(1)}%</td>
+          </tr>
+        `;
+      }).join('');
+
+      // 총합 행 추가
+      const avgSales = totalSales / monthsInRange.length;
+      const totalRow = `
+        <tr style="background: rgba(99, 102, 241, 0.1); border-top: 2px solid var(--primary); font-weight: 600;">
+          <td>평균</td>
+          <td style="color: var(--primary); font-size: 1.05rem;">${formatCurrency(avgSales)}</td>
+          <td colspan="2" style="text-align: center;">총 ${monthsInRange.length}개월</td>
+        </tr>
+      `;
+
+      tbody.innerHTML = rows + totalRow;
+    }
+
+    // 채널별 매출 표시 함수
+    function updateChannelSalesCard(channelSalesMap, totalSales) {
+      const content = $('channelSalesContent');
+      
+      if (channelSalesMap.size === 0) {
+        content.innerHTML = '<p class="text-center text-muted">채널별 매출 데이터가 없습니다</p>';
+        return;
+      }
+
+      // 채널별 데이터를 배열로 변환하고 금액순 정렬
+      const channelData = Array.from(channelSalesMap.entries())
+        .map(([channel, amount]) => ({
+          channel,
+          amount,
+          percentage: totalSales > 0 ? (amount / totalSales * 100) : 0
+        }))
+        .sort((a, b) => b.amount - a.amount);
+
+      const channelHtml = channelData.map(item => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border);">
+          <div style="flex: 1;">
+            <div style="font-weight: 500; color: var(--text-primary); margin-bottom: 0.25rem;">${item.channel}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">${item.percentage.toFixed(1)}%</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-weight: 600; color: var(--primary);">${formatCurrency(item.amount)}</div>
+          </div>
+        </div>
+      `).join('');
+
+      content.innerHTML = channelHtml;
+    }
+
+    function updateSalesTable(data, tableId, showActions = false) {
+      const tbody = $(tableId);
+      
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${showActions && isAdmin ? '5' : '4'}" class="text-center text-muted">데이터가 없습니다</td></tr>`;
+        return;
+      }
+
+      // 총 매출액 계산
+      let totalAmount = 0;
+      data.forEach(item => {
+        totalAmount += item.amount || 0;
+      });
+
+      const tableRows = data.map(item => `
+        <tr>
+          <td>${item.sales_date || '-'}</td>
+          <td>${item.channel || '-'}</td>
+          <td>${formatCurrency(item.amount)}</td>
+          <td>${item.memo || '-'}</td>
+          ${showActions && isAdmin ? `
+            <td>
+              <button class="btn btn-danger" onclick="deleteSales('${item.id}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          ` : ''}
+        </tr>
+      `).join('');
+
+      // 총합 행 추가
+      const totalRow = `
+        <tr style="background: rgba(99, 102, 241, 0.1); border-top: 2px solid var(--primary); font-weight: 600;">
+          <td colspan="2" style="text-align: right; padding-right: 1rem;">총 매출액:</td>
+          <td style="color: var(--primary); font-size: 1.1rem;">${formatCurrency(totalAmount)}</td>
+          <td${showActions && isAdmin ? ' colspan="2"' : ''}></td>
+        </tr>
+      `;
+
+      tbody.innerHTML = tableRows + totalRow;
+    }
+
+    function updatePurchasesTable(data, tableId, showActions = false) {
+      const tbody = $(tableId);
+      
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${showActions && isAdmin ? '5' : (tableId === 'dashboardPurchasesTable' || tableId === 'dashboardPurchasesTableCustom' ? '3' : '4')}" class="text-center text-muted">데이터가 없습니다</td></tr>`;
+        return;
+      }
+
+      if (tableId === 'dashboardPurchasesTable' || tableId === 'dashboardPurchasesTableCustom') {
+        tbody.innerHTML = data.map(item => `
+          <tr>
+            <td>${item.group_name || '-'} > ${item.category || '-'}</td>
+            <td>${formatCurrency(item.amount)}</td>
+            <td>${item.memo || '-'}</td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = data.map(item => `
+          <tr>
+            <td>${item.group_name || '-'}</td>
+            <td>${item.category || '-'}</td>
+            <td>${formatCurrency(item.amount)}</td>
+            <td>${item.memo || '-'}</td>
+            ${showActions && isAdmin ? `
+              <td>
+                <button class="btn btn-danger" onclick="deletePurchases('${item.id}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            ` : ''}
+          </tr>
+        `).join('');
+      }
+    }
+
+    // 데이터 저장 함수
+    async function saveSales(e) {
+      e.preventDefault();
+      
+      if (!isAdmin) {
+        showToast('관리자만 매출을 입력할 수 있습니다');
+        return;
+      }
+
+      const salesDate = $('salesDate').value;
+      const memo = $('salesMemo').value.trim();
+
+      if (!salesDate) {
+        showToast('날짜를 선택해주세요');
+        return;
+      }
+
+      const channels = ['오프라인', '배달의민족', '쿠팡이츠', '땡겨요', '네이버주문', '단체주문', '강의', '기타'];
+      const salesData = [];
+
+      // 입력된 채널들만 수집
+      channels.forEach(channel => {
+        const amount = parseInt($(`sales_${channel}`).value) || 0;
+        if (amount > 0) {
+          salesData.push({
+            sales_date: salesDate,
+            channel: channel,
+            amount: amount,
+            memo: memo,
+            ym: salesDate.slice(0, 7),
+            createdAt: serverTimestamp()
+          });
+        }
+      });
+
+      if (salesData.length === 0) {
+        showToast('최소 하나의 채널에 금액을 입력해주세요');
+        return;
+      }
+
+      try {
+        // 기존 데이터 삭제 (같은 날짜)
+        const existingQuery = query(
+          collection(db, 'sales'),
+          where('sales_date', '==', salesDate)
+        );
+        const existingSnapshot = await getDocs(existingQuery);
+        
+        const deletePromises = [];
+        existingSnapshot.forEach(doc => {
+          deletePromises.push(deleteDoc(doc.ref));
+        });
+        
+        if (deletePromises.length > 0) {
+          await Promise.all(deletePromises);
+        }
+
+        // 새 데이터 저장
+        const savePromises = salesData.map(data => addDoc(collection(db, 'sales'), data));
+        await Promise.all(savePromises);
+
+        // 폼 초기화
+        channels.forEach(channel => {
+          $(`sales_${channel}`).value = '';
+        });
+        $('salesMemo').value = '';
+        
+        // 실시간 합계 숨기기
+        hideSalesTotal();
+        
+        showToast(`매출이 저장되었습니다 (${salesData.length}개 채널)`);
+        
+        // 데이터 새로고침
+        await loadSalesData();
+        await loadDashboardData();
+        
+      } catch (error) {
+        console.error('Sales save error:', error);
+        showToast('매출 저장 중 오류가 발생했습니다');
+      }
+    }
+
+    async function savePurchases(e) {
+      e.preventDefault();
+      
+      if (!isAdmin) {
+        showToast('관리자만 매입을 입력할 수 있습니다');
+        return;
+      }
+
+      const ym = $('purchasesMonth').value;
+
+      if (!ym) {
+        showToast('월을 선택해주세요');
+        return;
+      }
+
+      const purchasesData = [];
+
+      // 모든 매입 카테고리 확인
+      Object.keys(PURCHASE_GROUPS).forEach(groupName => {
+        PURCHASE_GROUPS[groupName].forEach(category => {
+          const amount = parseInt($(`purchase_${groupName}_${category}`).value) || 0;
+          if (amount > 0) {
+            purchasesData.push({
+              ym: ym,
+              group_name: groupName,
+              category: category,
+              amount: amount,
+              memo: '',
+              createdAt: serverTimestamp()
+            });
+          }
+        });
+      });
+
+      if (purchasesData.length === 0) {
+        showToast('최소 하나의 항목에 금액을 입력해주세요');
+        return;
+      }
+
+      try {
+        // 기존 데이터 삭제 (같은 월)
+        const existingQuery = query(
+          collection(db, 'purchases'),
+          where('ym', '==', ym)
+        );
+        const existingSnapshot = await getDocs(existingQuery);
+        
+        const deletePromises = [];
+        existingSnapshot.forEach(doc => {
+          deletePromises.push(deleteDoc(doc.ref));
+        });
+        
+        if (deletePromises.length > 0) {
+          await Promise.all(deletePromises);
+        }
+
+        // 새 데이터 저장
+        const savePromises = purchasesData.map(data => addDoc(collection(db, 'purchases'), data));
+        await Promise.all(savePromises);
+
+        // 폼 초기화
+        Object.keys(PURCHASE_GROUPS).forEach(groupName => {
+          PURCHASE_GROUPS[groupName].forEach(category => {
+            $(`purchase_${groupName}_${category}`).value = '';
+          });
+        });
+        
+        showToast(`매입이 저장되었습니다 (${purchasesData.length}개 항목)`);
+        
+        // 데이터 새로고침
+        await loadPurchasesData();
+        await loadDashboardData();
+        
+      } catch (error) {
+        console.error('Purchases save error:', error);
+        showToast('매입 저장 중 오류가 발생했습니다');
+      }
+    }
+
+    // 삭제 함수들을 전역으로 노출
+    window.deleteSales = async function(id) {
+      if (!isAdmin) {
+        showToast('관리자만 삭제할 수 있습니다');
+        return;
+      }
+
+      if (!confirm('정말 삭제하시겠습니까?')) return;
+
+      try {
+        await deleteDoc(doc(db, 'sales', id));
+        showToast('매출이 삭제되었습니다');
+        await loadSalesData();
+        await loadDashboardData();
+      } catch (error) {
+        console.error('Sales delete error:', error);
+        showToast('매출 삭제 중 오류가 발생했습니다');
+      }
+    };
+
+    window.deletePurchases = async function(id) {
+      if (!isAdmin) {
+        showToast('관리자만 삭제할 수 있습니다');
+        return;
+      }
+
+      if (!confirm('정말 삭제하시겠습니까?')) return;
+
+      try {
+        await deleteDoc(doc(db, 'purchases', id));
+        showToast('매입이 삭제되었습니다');
+        await loadPurchasesData();
+        await loadDashboardData();
+      } catch (error) {
+        console.error('Purchases delete error:', error);
+        showToast('매입 삭제 중 오류가 발생했습니다');
+      }
+    };
+
+    // UI 업데이트 함수
+    function updateUI() {
+      const loginPage = $('loginPage');
+      const signupPage = $('signupPage');
+      const mainApp = $('mainApp');
+      const userInfo = $('userInfo');
+
+      console.log('Updating UI, currentUser:', currentUser ? currentUser.email : 'None', 'isAdmin:', isAdmin);
+
+      if (currentUser) {
+        loginPage.classList.add('hidden');
+        signupPage.classList.add('hidden');
+        mainApp.classList.remove('hidden');
+        userInfo.classList.remove('hidden');
+
+        $('userEmail').textContent = currentUser.email;
+        $('roleTag').innerHTML = `<i class="fas fa-user"></i><span>role: ${isAdmin ? 'admin' : 'viewer'}</span>`;
+
+        // 관리자 전용 UI 표시/숨김
+        document.querySelectorAll('.admin-only').forEach(el => {
+          if (isAdmin) {
+            el.classList.remove('hidden');
+          } else {
+            el.classList.add('hidden');
+          }
+        });
+
+        console.log('UI updated to logged in state');
+
+        // 데이터 로드
+        try {
+          updatePeriodControls(); // 기간 컨트롤 표시/숨김 설정
+          loadDashboardData();
+          loadSalesData();
+          loadPurchasesData();
+        } catch (error) {
+          console.error('Data loading error:', error);
+        }
+      } else {
+        loginPage.classList.remove('hidden');
+        signupPage.classList.add('hidden');
+        mainApp.classList.add('hidden');
+        userInfo.classList.add('hidden');
+        
+        console.log('UI updated to logged out state');
+      }
+    }
+
+    // 이벤트 리스너 설정
+    function setupEventListeners() {
+      // 인증 관련
+      $('showSignup').addEventListener('click', () => {
+        $('loginPage').classList.add('hidden');
+        $('signupPage').classList.remove('hidden');
+      });
+
+      $('showLogin').addEventListener('click', () => {
+        $('signupPage').classList.add('hidden');
+        $('loginPage').classList.remove('hidden');
+      });
+
+      $('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = $('loginEmail').value.trim();
+        const password = $('loginPassword').value.trim();
+        const loginBtn = e.target.querySelector('button[type="submit"]');
+
+        // 입력 검증
+        if (!email) {
+          showToast('이메일을 입력해주세요');
+          return;
+        }
+        
+        if (!password) {
+          showToast('비밀번호를 입력해주세요');
+          return;
+        }
+
+        // 로딩 상태
+        const originalText = loginBtn.innerHTML;
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 로그인 중...';
+
+        try {
+          console.log('로그인 시도:', email);
+          await signInWithEmailAndPassword(auth, email, password);
+          showToast('로그인 성공!');
+        } catch (error) {
+          console.error('Login error:', error);
+          let errorMessage = '로그인에 실패했습니다';
+          
+          switch (error.code) {
+            case 'auth/user-not-found':
+              errorMessage = '등록되지 않은 이메일입니다';
+              break;
+            case 'auth/wrong-password':
+              errorMessage = '비밀번호가 틀렸습니다';
+              break;
+            case 'auth/invalid-email':
+              errorMessage = '올바른 이메일 형식을 입력해주세요';
+              break;
+            case 'auth/too-many-requests':
+              errorMessage = '너무 많은 시도가 있었습니다. 잠시 후 다시 시도해주세요';
+              break;
+            case 'auth/network-request-failed':
+              errorMessage = '네트워크 연결을 확인해주세요';
+              break;
+            default:
+              errorMessage = `로그인 실패: ${error.message}`;
+          }
+          
+          showToast(errorMessage);
+        } finally {
+          // 로딩 상태 해제
+          loginBtn.disabled = false;
+          loginBtn.innerHTML = originalText;
+        }
+      });
+
+      $('signupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!validateSignupForm()) return;
+
+        const email = $('signupEmail').value.trim();
+        const password = $('signupPassword').value;
+        const name = $('signupName').value.trim();
+        const phone = $('signupPhone').value.trim();
+        const birthdate = $('signupBirthdate').value;
+
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+
+          await setDoc(doc(db, 'users', user.uid), {
+            email: email,
+            name: name,
+            phone: phone || '',
+            birthdate: birthdate || '',
+            role: email === ADMIN_EMAIL ? 'admin' : 'viewer',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+
+          showToast('회원가입이 완료되었습니다!');
+          
+          // 폼 초기화
+          $('signupForm').reset();
+          
+        } catch (error) {
+          console.error('Signup error:', error);
+          showToast('회원가입에 실패했습니다');
+        }
+      });
+
+      $('logoutBtn').addEventListener('click', async () => {
+        try {
+          await signOut(auth);
+          showToast('로그아웃되었습니다');
+        } catch (error) {
+          console.error('Logout error:', error);
+        }
+      });
+
+      // 탭 전환
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          const tabName = tab.dataset.tab;
+          document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.add('hidden');
+          });
+          $(tabName + 'Tab').classList.remove('hidden');
+        });
+      });
+
+      // 기간 선택
+      document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          console.log('기간 버튼 클릭:', btn.dataset.period);
+          
+          document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentPeriod = btn.dataset.period;
+          
+          console.log('currentPeriod 변경됨:', currentPeriod);
+          
+          updatePeriodControls();
+          loadDashboardData();
+        });
+      });
+
+      // 대시보드 날짜 네비게이션 (일별)
+      $('prevDayBtn').addEventListener('click', () => {
+        const currentDate = $('dashboardDate').value;
+        const prevDate = addDays(currentDate, -1);
+        $('dashboardDate').value = prevDate;
+        loadDashboardData();
+      });
+
+      $('nextDayBtn').addEventListener('click', () => {
+        const currentDate = $('dashboardDate').value;
+        const nextDate = addDays(currentDate, 1);
+        $('dashboardDate').value = nextDate;
+        loadDashboardData();
+      });
+
+      $('todayDashBtn').addEventListener('click', () => {
+        const today = getKoreanToday();
+        $('dashboardDate').value = today;
+        loadDashboardData();
+      });
+
+      // 대시보드 월 네비게이션 (월별) - 새로 추가
+      $('prevMonthBtn').addEventListener('click', () => {
+        const currentMonth = $('dashboardMonth').value;
+        const prevMonth = addMonths(currentMonth, -1);
+        $('dashboardMonth').value = prevMonth;
+        loadDashboardData();
+      });
+
+      $('nextMonthBtn').addEventListener('click', () => {
+        const currentMonth = $('dashboardMonth').value;
+        const nextMonth = addMonths(currentMonth, 1);
+        $('dashboardMonth').value = nextMonth;
+        loadDashboardData();
+      });
+
+      $('thisMonthBtn').addEventListener('click', () => {
+        const currentMonth = getKoreanCurrentMonth();
+        $('dashboardMonth').value = currentMonth;
+        loadDashboardData();
+      });
+
+      // 대시보드 날짜/월 직접 변경 - 수정됨
+      $('dashboardDate').addEventListener('change', loadDashboardData);
+      $('dashboardMonth').addEventListener('change', loadDashboardData);
+
+      // 매출 날짜 네비게이션 (기존)
+      $('prevDateBtn').addEventListener('click', () => {
+        const currentDate = new Date($('salesDate').value);
+        currentDate.setDate(currentDate.getDate() - 1);
+        $('salesDate').value = currentDate.toISOString().split('T')[0];
+        syncSalesMonthFromDate(); // 월 선택 동기화
+      });
+
+      $('nextDateBtn').addEventListener('click', () => {
+        const currentDate = new Date($('salesDate').value);
+        currentDate.setDate(currentDate.getDate() + 1);
+        $('salesDate').value = currentDate.toISOString().split('T')[0];
+        syncSalesMonthFromDate(); // 월 선택 동기화
+      });
+
+      $('todayBtn').addEventListener('click', () => {
+        $('salesDate').value = getKoreanToday();
+        syncSalesMonthFromDate(); // 월 선택 동기화
+      });
+      
+      // 매출 날짜 직접 변경 시에도 동기화
+      $('salesDate').addEventListener('change', () => {
+        syncSalesMonthFromDate();
+      });
+
+      // 커스텀 월 범위 변경
+      $('customStartMonth').addEventListener('change', loadDashboardData);
+      $('customEndMonth').addEventListener('change', loadDashboardData);
+
+      // 폼 제출
+      $('salesInputForm').addEventListener('submit', saveSales);
+      $('purchasesInputForm').addEventListener('submit', savePurchases);
+
+      // 매출 입력 필드 실시간 합계 계산
+      const salesChannels = ['오프라인', '배달의민족', '쿠팡이츠', '땡겨요', '네이버주문', '단체주문', '강의', '기타'];
+      salesChannels.forEach(channel => {
+        const input = $(`sales_${channel}`);
+        if (input) {
+          input.addEventListener('input', updateSalesTotal);
+          input.addEventListener('keyup', updateSalesTotal);
+          input.addEventListener('change', updateSalesTotal);
+        }
+      });
+
+      // 엑셀 다운로드/업로드
+      $('downloadSalesExcel').addEventListener('click', downloadSalesExcel);
+      $('downloadSalesTemplate').addEventListener('click', downloadSalesTemplate);
+      $('uploadSalesExcel').addEventListener('click', () => $('salesFileInput').click());
+      $('salesFileInput').addEventListener('change', uploadSalesExcel);
+
+      $('downloadPurchasesExcel').addEventListener('click', downloadPurchasesExcel);
+      $('downloadPurchasesTemplate').addEventListener('click', downloadPurchasesTemplate);
+      $('uploadPurchasesExcel').addEventListener('click', () => $('purchasesFileInput').click());
+      $('purchasesFileInput').addEventListener('change', uploadPurchasesExcel);
+
+      // 셀렉트 변경
+      $('salesMonthSelect').addEventListener('change', loadSalesData);
+      $('purchasesMonthSelect').addEventListener('change', loadPurchasesData);
+    }
+
+    // Firebase Auth 상태 변경 리스너
+    onAuthStateChanged(auth, async (user) => {
+      console.log('Auth state changed:', user ? user.email : 'No user');
+      
+      if (user) {
+        currentUser = user;
+        console.log('User logged in:', user.email);
+        
+        // 사용자 역할 확인
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            isAdmin = userData.role === 'admin' || user.email === ADMIN_EMAIL;
+            console.log('User role from Firestore:', userData.role);
+          } else {
+            // 사용자 문서가 없으면 기본값으로 생성
+            isAdmin = user.email === ADMIN_EMAIL;
+            console.log('No user document found, creating with default role');
+            
+            await setDoc(doc(db, 'users', user.uid), {
+              email: user.email,
+              name: user.displayName || '',
+              phone: '',
+              birthdate: '',
+              role: isAdmin ? 'admin' : 'viewer',
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            });
+          }
+        } catch (error) {
+          console.error('User role check error:', error);
+          isAdmin = user.email === ADMIN_EMAIL;
+        }
+        
+        console.log('Final admin status:', isAdmin);
+      } else {
+        currentUser = null;
+        isAdmin = false;
+        console.log('User logged out');
+      }
+      
+      updateUI();
+    });
+
+    // 초기화
+    document.addEventListener('DOMContentLoaded', () => {
+      setupEventListeners();
+      initializeSelects();
+    });
+  </script>
+</body>
+</html>
