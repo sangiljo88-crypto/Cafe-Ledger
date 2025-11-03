@@ -2244,11 +2244,17 @@
       try {
         const data = await file.arrayBuffer();
         const workbook = XLSX.read(data);
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        // 모든 시트를 읽어서 처리
+        let allJsonData = [];
+        
+        for (const sheetName of workbook.SheetNames) {
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          allJsonData = allJsonData.concat(jsonData);
+        }
 
-        if (jsonData.length === 0) {
+        if (allJsonData.length === 0) {
           showToast('업로드할 데이터가 없습니다');
           return;
         }
@@ -2257,7 +2263,7 @@
         const dataByMonth = {};
         const monthsInExcel = new Set();
         
-        for (const row of jsonData) {
+        for (const row of allJsonData) {
           const ym = row['월'] || row['month'] || '';
           const groupName = row['그룹'] || row['group'] || '';
           const category = row['카테고리'] || row['category'] || '';
@@ -2265,8 +2271,7 @@
           const memo = row['메모'] || row['memo'] || '';
 
           if (!ym) {
-            showToast('월 정보가 없는 행이 있습니다. 엑셀의 "월" 컬럼을 확인해주세요.');
-            return;
+            continue; // 월 정보가 없는 행은 건너뛰기
           }
 
           // 엑셀에 있는 모든 월 정보 수집
@@ -2296,6 +2301,7 @@
 
         // 엑셀에 있는 각 월별로 기존 데이터를 모두 삭제
         let totalCount = 0;
+        const processedMonths = [];
         
         for (const ym of monthsInExcel) {
           // 기존 데이터 삭제
@@ -2319,12 +2325,15 @@
             const savePromises = dataByMonth[ym].map(data => addDoc(collection(db, 'purchases'), data));
             await Promise.all(savePromises);
             totalCount += dataByMonth[ym].length;
+            processedMonths.push(ym);
           }
         }
 
-        const monthList = Array.from(monthsInExcel).join(', ');
+        const sheetCount = workbook.SheetNames.length;
+        const monthList = processedMonths.length > 0 ? processedMonths.join(', ') : Array.from(monthsInExcel).join(', ');
+        
         if (totalCount > 0) {
-          showToast(`${totalCount}건의 매입 데이터가 업로드되었습니다 (${monthList})`);
+          showToast(`${totalCount}건의 매입 데이터가 업로드되었습니다 (${sheetCount}개 시트, ${monthList})`);
         } else {
           showToast(`${monthList} 월의 기존 데이터가 모두 삭제되었습니다 (0원 업로드)`);
         }
